@@ -1,4 +1,4 @@
-baseURL: "/"
+baseURL: ""
 title: Marcin Halupka
 paginate: 5
 theme: "PaperMod"
@@ -36,8 +36,8 @@ params:
     comments: false
     hidemeta: false
     hideSummary: false
-    showtoc: false
-    tocopen: false
+    showtoc: true
+    tocopen: true
 
     assets:
         # disableHLJS: true # to disable highlight.js

@@ -1,32 +1,20 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
-  
   <url>
+    <loc>/posts/introduction-to-hidden-markov-model/</loc>
+    <lastmod>2021-10-22T00:00:00+00:00</lastmod>
+  </url><url>
     <loc>/</loc>
-    <lastmod>2021-10-22T11:53:04+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/posts/my-first-post/</loc>
-    <lastmod>2021-10-22T11:53:04+00:00</lastmod>
-  </url>
-  
-  <url>
+    <lastmod>2021-10-22T00:00:00+00:00</lastmod>
+  </url><url>
     <loc>/posts/</loc>
-    <lastmod>2021-10-22T11:53:04+00:00</lastmod>
-  </url>
-  
-  <url>
+    <lastmod>2021-10-22T00:00:00+00:00</lastmod>
+  </url><url>
     <loc>/archives/</loc>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>/categories/</loc>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>/tags/</loc>
   </url>
-  
 </urlset>
