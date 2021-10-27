@@ -9,7 +9,17 @@
       <link>%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</link>
     </image>
     <generator>Hugo -- gohugo.io</generator>
-    <lastBuildDate>Fri, 22 Oct 2021 00:00:00 +0000</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Tue, 26 Oct 2021 23:35:17 +0200</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Introduction to Time Series</title>
+      <link>/posts/introduction-to-time-series/</link>
+      <pubDate>Tue, 26 Oct 2021 23:35:17 +0200</pubDate>
+      
+      <guid>/posts/introduction-to-time-series/</guid>
+      <description>Good forecasts can seem almost magical, while bad forecasts may be dangerous. We can look at three famous predictions about computing:
+ I think there is a world market for maybe five computers. (Chairman of IBM, 1943) Computers in the future may weigh no more than 1.5 tons. (Popular Mechanics, 1949) There is no reason anyone would want a computer in their home. (President, DEC, 1977)  The last of these was made three years before IBM produced the first personal computer.</description>
+    </item>
+    
     <item>
       <title>Introduction to Hidden Markov Model</title>
       <link>/posts/introduction-to-hidden-markov-model/</link>

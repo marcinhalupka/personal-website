@@ -1,0 +1,254 @@
+<!doctype html><html lang=en dir=auto>
+<head><meta charset=utf-8>
+<meta http-equiv=x-ua-compatible content="IE=edge">
+<meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no">
+<meta name=robots content="index, follow">
+<title>Introduction to Time Series | Marcin Halupka</title>
+<meta name=keywords content>
+<meta name=description content="Good forecasts can seem almost magical, while bad forecasts may be dangerous. We can look at three famous predictions about computing:
+ I think there is a world market for maybe five computers. (Chairman of IBM, 1943) Computers in the future may weigh no more than 1.5 tons. (Popular Mechanics, 1949) There is no reason anyone would want a computer in their home. (President, DEC, 1977)  The last of these was made three years before IBM produced the first personal computer.">
+<meta name=author content="Marcin Halupka">
+<link rel=canonical href=/posts/introduction-to-time-series/>
+<meta name=google-site-verification content="XYZabc">
+<meta name=yandex-verification content="XYZabc">
+<meta name=msvalidate.01 content="XYZabc">
+<link crossorigin=anonymous href=/assets/css/stylesheet.min.6f60056d44d3f7eb69a4bc6c332b59960f3a995802bded244750232f33713c49.css integrity="sha256-b2AFbUTT9+tppLxsMytZlg86mVgCve0kR1AjLzNxPEk=" rel="preload stylesheet" as=style>
+<script defer crossorigin=anonymous src=/assets/js/highlight.min.7680afc38aa6b15ddf158a4f3780b7b1f7dde7e91d26f073e6229bb7a0793c92.js integrity="sha256-doCvw4qmsV3fFYpPN4C3sffd5+kdJvBz5iKbt6B5PJI=" onload=hljs.initHighlightingOnLoad()></script>
+<link rel=icon href=%3Clink%20/%20abs%20url%3E>
+<link rel=icon type=image/png sizes=16x16 href=%3Clink%20/%20abs%20url%3E>
+<link rel=icon type=image/png sizes=32x32 href=%3Clink%20/%20abs%20url%3E>
+<link rel=apple-touch-icon href=%3Clink%20/%20abs%20url%3E>
+<link rel=mask-icon href=%3Clink%20/%20abs%20url%3E>
+<meta name=theme-color content="#2e2e33">
+<meta name=msapplication-TileColor content="#2e2e33">
+<meta name=generator content="Hugo 0.88.1">
+<noscript>
+<style>#theme-toggle,.top-link{display:none}</style>
+<style>@media(prefers-color-scheme:dark){:root{--theme:rgb(29, 30, 32);--entry:rgb(46, 46, 51);--primary:rgb(218, 218, 219);--secondary:rgb(155, 156, 157);--tertiary:rgb(65, 66, 68);--content:rgb(196, 196, 197);--hljs-bg:rgb(46, 46, 51);--code-bg:rgb(55, 56, 62);--border:rgb(51, 51, 51)}.list{background:var(--theme)}.list:not(.dark)::-webkit-scrollbar-track{background:0 0}.list:not(.dark)::-webkit-scrollbar-thumb{border-color:var(--theme)}}</style>
+</noscript>
+<script type=application/javascript>var doNotTrack=!1;doNotTrack||(function(a,e,f,g,b,c,d){a.GoogleAnalyticsObject=b,a[b]=a[b]||function(){(a[b].q=a[b].q||[]).push(arguments)},a[b].l=1*new Date,c=e.createElement(f),d=e.getElementsByTagName(f)[0],c.async=1,c.src=g,d.parentNode.insertBefore(c,d)}(window,document,'script','https://www.google-analytics.com/analytics.js','ga'),ga('create','UA-123-45','auto'),ga('send','pageview'))</script><meta property="og:title" content="Introduction to Time Series">
+<meta property="og:description" content="Good forecasts can seem almost magical, while bad forecasts may be dangerous. We can look at three famous predictions about computing:
+ I think there is a world market for maybe five computers. (Chairman of IBM, 1943) Computers in the future may weigh no more than 1.5 tons. (Popular Mechanics, 1949) There is no reason anyone would want a computer in their home. (President, DEC, 1977)  The last of these was made three years before IBM produced the first personal computer.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="/posts/introduction-to-time-series/"><meta property="og:image" content="%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E"><meta property="article:section" content="posts">
+<meta property="article:published_time" content="2021-10-26T23:35:17+02:00">
+<meta property="article:modified_time" content="2021-10-26T23:35:17+02:00"><meta property="og:site_name" content="ExampleSite">
+<meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E">
+<meta name=twitter:title content="Introduction to Time Series">
+<meta name=twitter:description content="Good forecasts can seem almost magical, while bad forecasts may be dangerous. We can look at three famous predictions about computing:
+ I think there is a world market for maybe five computers. (Chairman of IBM, 1943) Computers in the future may weigh no more than 1.5 tons. (Popular Mechanics, 1949) There is no reason anyone would want a computer in their home. (President, DEC, 1977)  The last of these was made three years before IBM produced the first personal computer.">
+<script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":2,"name":"Posts","item":"/posts/"},{"@type":"ListItem","position":3,"name":"Introduction to Time Series","item":"/posts/introduction-to-time-series/"}]}</script>
+<script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Introduction to Time Series","name":"Introduction to Time Series","description":"Good forecasts can seem almost magical, while bad forecasts may be dangerous. We can look at three famous predictions about computing:\n I think there is a world market for maybe five computers. (Chairman of IBM, 1943) Computers in the future may weigh no more than 1.5 tons. (Popular Mechanics, 1949) There is no reason anyone would want a computer in their home. (President, DEC, 1977)  The last of these was made three years before IBM produced the first personal computer.","keywords":[],"articleBody":"Good forecasts can seem almost magical, while bad forecasts may be dangerous. We can look at three famous predictions about computing:\n I think there is a world market for maybe five computers. (Chairman of IBM, 1943) Computers in the future may weigh no more than 1.5 tons. (Popular Mechanics, 1949) There is no reason anyone would want a computer in their home. (President, DEC, 1977)  The last of these was made three years before IBM produced the first personal computer. Not surprisingly, you can no longer buy a DEC computer.\nForecasting is obviously a difficult activity and businesses that do it well have a big advantage over those whose forecasts fail.\nWhat can be forcast? Forecasting is required in many situations:\n deciding whether to build another power generation plant in the next five years requires forecasts of future demand, scheduling staff in a call centre next week requires forecasts of call volumes, stocking an inventory requires forecasts of stock requirements.  And these are just examples. Forecasts can be required several years in advance (some capital investments) or only a few minutes beforehand (telecommunication routing) - no matter the circumstances and time horizon, the benefits are clear.\nSome things are easier than others. The time of the sunrise tomorrow morning can be forecast quite precisely. On the other hand, tomorrow’s lotto numbers can’t be forecast with any accuracy. The predictability of an event or a quantity depends on several factors, key ones are:\n How well we understand the factors that contribute to it? How much data is available? Can the forecasts affect the thing we are trying to forecast?  Often in forecasting, a key step is knowing when something can be forecast accurately and when forecasts will be no better than tossing a coin. Good forecasts capture the patterns and relationships which exist in the historical data, but do not replicate past events that will not occur again. Many people wrongly assume that forecasts are not possible in a changing environment. Every environment is changing and a good forecasting model captures the way in which things are changing. Forecasts rarely assume that the environment is unchanging - rather that the way in which the environment is changing will continue into the future. The highly volatile environment will continue to be highly volatile, a business with fluctuating sales will continue to have fluctuating sales, en economy that has gone through booms and busts will continue to go through booms and busts.\nForecasting, planning and goals Forecasting is a common statistical task in business but often done poorly and confused with planning and goals.\nForecasting is about predicting the future as accurately as possible, given all the information available.\nGoals are what you would like to have happen. They should be linked to forecasts and plans but this doesn’t always occur.\nPlanning is a response to forecasts and goals - creating a set of actions required to make your forecasts match your goals.\nDetermining what to forecast In the early stages of a forecasting project, it’s easy to throw yourself into work and forget about some key questions.\nIf forecasts are required for items in a manufacturing environment, it’s nevessary to ask if forecasts are needed for:\n Every product lines or some groups? Every sales outlet, outlets grouped by region, or maybe only total sales? Weekly, monthly or annual data?  A quick checklist:\n What is the forecasting horizon? How frequently are forecasts required? Is it clear what we want to have as an output? Should we segment the data somehow? How the forecasts will be used? Do we have the data? And if we don’t can we collect it?  Forecasting data and methods The appropriate method depends largely on that data is available.\nIf there is no data or if available data is not relevant to the forecasts, then qualitative forecasting methods must be used. These methods are not purely guesswork, they are well-developed structured approaches to obtaining good forecasts without using historical data.\nQuantitative forecasting can be applied when two conditions are satisfied:\n Numerical information about the past is available It is reasonable to assume that some aspects of the past patterns will continue into the future  Most quantitative forecasting methods use either time series data (collected at regular intervals over time) or cross-sectional data (collected at single point in time).\nExamples of time series data include:\n Daily Tesla stock prices Monthly rainfall Quarterly sales results for Amazon Annual Google profits  Anything that is observed sequentially over time is a time series and usual assupmtion says thay time series are observed at regular intervals of time (e.g. hourly, daily, weekly, monthly, annually).\nThe simplest time series forecasting methods use only information on the variable to be forecast and make no attempt to discover other factors that affect its behaviour - they will extrapolate trend and seasonal patterns but ignore all other information such as marketing activities, competitor activity, changes in economic conditions and so on.\nIf we define $ED_t$ as an electricity demand at time $t$, we may think about a typical time series model:\n$$ ED_{t+1} = f(ED_{t}, ED_{t-1}, ED_{t-2}, ED_{t-3},\\dots) + \\text{error} $$\nPrediction is based on past values of a variable but not on external variables which may affect the system. The error term on the right allows for random variation ant the effects of the relevant variables that are not included in the model.\nOn the other hand, we can notice that there is a dependency between an electricity demand and other external variables. We could think about anexplanatory model:\n$$\\begin{eqnarray} ED_{t+1} = f(\\text{temperature, population, time of day}) + error. \\end{eqnarray}$$\nThe relationship will not be exact as there can always be changes in electricity demand that cannot be accounted for by the predictor variables.\nIf each of the approach explains some variability visible in our data but different portion than another one, we could combine them together to receive a mixed model:\n$$\\begin{eqnarray} ED_{t+1} = f(ED_{t}, \\text{temperature, population, time of day}) + error. \\end{eqnarray}$$\nSo is the mixed model the best one? Well, it depends. Sometimes the only thing we care about is the accuracy (or other success metric), sometimes about the explainability of the prediction and sometimes about something totally different. We also have to take into account the resources and data available and the way in which the forecasting model is to be used. In each scenario different model can turn out to be the best. It’s always a trade-off and the better we understand the goals, the better decisions we make.\nThe basic steps in a forecasting task The framework usually involves five basic steps, common for modeling.\nStep 1: Problem definition Often the most difficult part - who requires the forecasts, how the forecasting function fits within the organisation requiring the forecasts. This step needs some time spend on talking to everyone who will be involved in collecting data, maintaining databases and using forecasts for future planning.\nStep 2: Gathering information We need the data and accumulated expertise of the people who collect it and use the forecasts. Often it’s difficult to obtain enough historical data to be able to fit a good model. In that case, judgmental forecasting methods can be considered. Occasionally, old data can be less useful due to structural changes in the system being forecast - we may choose then to use only the most recent data. However good models may handle evolutionary changes in the system so don’t throw away good data unnecessarily.\nStep 3: Exploratory analysis Always start by graphing the data. Are there consistent patterns? Is there a trend? Is seasonality visible/important? Is there a presence of business cycles? Are there any outliers that need to be explained by subject matter experts?\nStep 4: Choosing and fitting models Each model is an artificial construct that is based on a set of assumptions. The best model to use depends on the availability of historical data, the strength of relationship between the forecast variable and explanatory variables and the way in which the forecasts are to be used. It’s common to compare multiple ones with varying underlying mechanisms\nStep 5: Using and evaluating a forecasting model Once a model has been selected and trained, it’s used to make forecasts. The performance of the model has to be continuously monitored and evaluated. There may be multiple challenges waiting - from practical ones such as missing values and outliers to organizational like acting on the forecasts.\n","wordCount":"1406","inLanguage":"en","datePublished":"2021-10-26T23:35:17+02:00","dateModified":"2021-10-26T23:35:17+02:00","author":{"@type":"Person","name":"Marcin Halupka"},"mainEntityOfPage":{"@type":"WebPage","@id":"/posts/introduction-to-time-series/"},"publisher":{"@type":"Organization","name":"Marcin Halupka","logo":{"@type":"ImageObject","url":"%3Clink%20/%20abs%20url%3E"}}}</script>
+</head>
+<body id=top>
+<script>localStorage.getItem("pref-theme")==="dark"?document.body.classList.add('dark'):localStorage.getItem("pref-theme")==="light"?document.body.classList.remove('dark'):window.matchMedia('(prefers-color-scheme: dark)').matches&&document.body.classList.add('dark')</script>
+<header class=header>
+<nav class=nav>
+<div class=logo>
+<a href accesskey=h title="Marcin Halupka (Alt + H)">Marcin Halupka</a>
+<span class=logo-switches>
+<button id=theme-toggle accesskey=t title="(Alt + T)"><svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+</button>
+</span>
+</div>
+<ul id=menu>
+<li>
+<a href=/posts/ title=Posts>
+<span>Posts</span>
+</a>
+</li>
+<li>
+<a href=/projects/ title=Projects>
+<span>Projects</span>
+</a>
+</li>
+<li>
+<a href=/about/ title="About me">
+<span>About me</span>
+</a>
+</li>
+</ul>
+</nav>
+</header>
+<main class=main>
+<article class=post-single>
+<header class=post-header>
+<div class=breadcrumbs><a href>Home</a>&nbsp;»&nbsp;<a href=/posts/>Posts</a></div>
+<h1 class=post-title>
+Introduction to Time Series
+</h1>
+<div class=post-meta>October 26, 2021&nbsp;·&nbsp;7 min&nbsp;·&nbsp;Marcin Halupka&nbsp;|&nbsp;<a href=https://github.com/%3cpath_to_repo%3e/content/posts/introduction-to-time-series.md rel="noopener noreferrer" target=_blank>Suggest Changes</a>
+</div>
+</header> <div class=toc>
+<details open>
+<summary accesskey=c title="(Alt + C)">
+<span class=details>Table of Contents</span>
+</summary>
+<div class=inner><ul>
+<li>
+<a href=#what-can-be-forcast aria-label="What can be forcast?">What can be forcast?</a></li>
+<li>
+<a href=#forecasting-planning-and-goals aria-label="Forecasting, planning and goals">Forecasting, planning and goals</a></li>
+<li>
+<a href=#determining-what-to-forecast aria-label="Determining what to forecast">Determining what to forecast</a></li>
+<li>
+<a href=#forecasting-data-and-methods aria-label="Forecasting data and methods">Forecasting data and methods</a></li>
+<li>
+<a href=#the-basic-steps-in-a-forecasting-task aria-label="The basic steps in a forecasting task">The basic steps in a forecasting task</a>
+</li>
+</ul>
+</div>
+</details>
+</div>
+<div class=post-content><p>Good forecasts can seem almost magical, while bad forecasts may be dangerous. We can look at three famous predictions about computing:</p>
+<ul>
+<li><em>I think there is a world market for maybe five computers.</em> (Chairman of IBM, 1943)</li>
+<li><em>Computers in the future may weigh no more than 1.5 tons.</em> (Popular Mechanics, 1949)</li>
+<li><em>There is no reason anyone would want a computer in their home.</em> (President, DEC, 1977)</li>
+</ul>
+<p>The last of these was made three years before IBM produced the first personal computer. Not surprisingly, you can no longer buy a DEC computer.</p>
+<p>Forecasting is obviously a difficult activity and businesses that do it well have a big advantage over those whose forecasts fail.</p>
+<h1 id=what-can-be-forcast>What can be forcast?<a hidden class=anchor aria-hidden=true href=#what-can-be-forcast>#</a></h1>
+<p>Forecasting is required in many situations:</p>
+<ul>
+<li>deciding whether to build another power generation plant in the next five years requires forecasts of future demand,</li>
+<li>scheduling staff in a call centre next week requires forecasts of call volumes,</li>
+<li>stocking an inventory requires forecasts of stock requirements.</li>
+</ul>
+<p>And these are just examples. Forecasts can be required several years in advance (some capital investments) or only a few minutes beforehand
+(telecommunication routing) - no matter the circumstances and time horizon, the benefits are clear.</p>
+<p>Some things are easier than others. The time of the sunrise tomorrow morning can be forecast quite precisely. On the other hand, tomorrow&rsquo;s lotto
+numbers can&rsquo;t be forecast with any accuracy. The predictability of an event or a quantity depends on several factors, key ones are:</p>
+<ol>
+<li>How well we understand the factors that contribute to it?</li>
+<li>How much data is available?</li>
+<li>Can the forecasts affect the thing we are trying to forecast?</li>
+</ol>
+<p>Often in forecasting, a key step is knowing when something can be forecast accurately and when forecasts will be no better than tossing a coin. Good forecasts capture the patterns
+and relationships which exist in the historical data, but do not replicate past events that will not occur again. Many people wrongly assume that forecasts are not possible in a
+changing environment. Every environment is changing and a good forecasting model captures the way in which things are changing. Forecasts rarely assume that the environment is unchanging - rather that
+the way in which the environment is changing will continue into the future. The highly volatile environment will continue to be highly volatile, a business with fluctuating sales will continue to have
+fluctuating sales, en economy that has gone through booms and busts will continue to go through booms and busts.</p>
+<h1 id=forecasting-planning-and-goals>Forecasting, planning and goals<a hidden class=anchor aria-hidden=true href=#forecasting-planning-and-goals>#</a></h1>
+<p>Forecasting is a common statistical task in business but often done poorly and confused with planning and goals.</p>
+<p><strong>Forecasting</strong> is about predicting the future as accurately as possible, given all the information available.</p>
+<p><strong>Goals</strong> are what you would like to have happen. They should be linked to forecasts and plans but this doesn&rsquo;t always occur.</p>
+<p><strong>Planning</strong> is a response to forecasts and goals - creating a set of actions required to make your forecasts match your goals.</p>
+<h1 id=determining-what-to-forecast>Determining what to forecast<a hidden class=anchor aria-hidden=true href=#determining-what-to-forecast>#</a></h1>
+<p>In the early stages of a forecasting project, it&rsquo;s easy to throw yourself into work and forget about some key questions.</p>
+<p>If forecasts are required for items in a manufacturing environment, it&rsquo;s nevessary to ask if forecasts are needed for:</p>
+<ol>
+<li>Every product lines or some groups?</li>
+<li>Every sales outlet, outlets grouped by region, or maybe only total sales?</li>
+<li>Weekly, monthly or annual data?</li>
+</ol>
+<p>A quick checklist:</p>
+<ol>
+<li>What is the forecasting horizon?</li>
+<li>How frequently are forecasts required?</li>
+<li>Is it clear what we want to have as an output?</li>
+<li>Should we segment the data somehow?</li>
+<li>How the forecasts will be used?</li>
+<li>Do we have the data? And if we don&rsquo;t can we collect it?</li>
+</ol>
+<h1 id=forecasting-data-and-methods>Forecasting data and methods<a hidden class=anchor aria-hidden=true href=#forecasting-data-and-methods>#</a></h1>
+<p>The appropriate method depends largely on that data is available.</p>
+<p>If there is no data or if available data is not relevant to the forecasts, then <code>qualitative forecasting</code> methods must be used. These methods are not purely guesswork,
+they are well-developed structured approaches to obtaining good forecasts without using historical data.</p>
+<p><code>Quantitative forecasting</code> can be applied when two conditions are satisfied:</p>
+<ol>
+<li>Numerical information about the past is available</li>
+<li>It is reasonable to assume that some aspects of the past patterns will continue into the future</li>
+</ol>
+<p>Most quantitative forecasting methods use either <code>time series data</code> (collected at regular intervals over time) or <code>cross-sectional data</code> (collected at single point in time).</p>
+<p>Examples of time series data include:</p>
+<ul>
+<li>Daily Tesla stock prices</li>
+<li>Monthly rainfall</li>
+<li>Quarterly sales results for Amazon</li>
+<li>Annual Google profits</li>
+</ul>
+<p>Anything that is observed sequentially over time is a time series and usual assupmtion says thay time series are observed at regular intervals of time (e.g. hourly, daily, weekly, monthly, annually).</p>
+<p>The simplest time series forecasting methods use only information on the variable to be forecast and make no attempt to discover other factors that affect its behaviour - they will extrapolate trend
+and seasonal patterns but ignore all other information such as marketing activities, competitor activity, changes in economic conditions and so on.</p>
+<p>If we define $ED_t$ as an electricity demand at time $t$, we may think about a typical <code>time series model</code>:</p>
+<p>$$
+ED_{t+1} = f(ED_{t}, ED_{t-1}, ED_{t-2}, ED_{t-3},\dots) + \text{error}
+$$</p>
+<p>Prediction is based on past values of a variable but not on external variables which may affect the system. The error term on the right allows for random variation ant the effects of the relevant variables
+that are not included in the model.</p>
+<p>On the other hand, we can notice that there is a dependency between an electricity demand and other external variables. We could think about an<code>explanatory model</code>:</p>
+<p>$$\begin{eqnarray}
+ED_{t+1} = f(\text{temperature, population, time of day}) + error.
+\end{eqnarray}$$</p>
+<p>The relationship will not be exact as there can always be changes in electricity demand that cannot be accounted for by the predictor variables.</p>
+<p>If each of the approach explains some variability visible in our data but different portion than another one, we could combine them together to receive a <code>mixed model</code>:</p>
+<p>$$\begin{eqnarray}
+ED_{t+1} = f(ED_{t}, \text{temperature, population, time of day}) + error.
+\end{eqnarray}$$</p>
+<p>So is the mixed model the best one? Well, it depends. Sometimes the only thing we care about is the accuracy (or other success metric), sometimes about the explainability of the prediction and sometimes about
+something totally different. We also have to take into account the resources and data available and the way in which the forecasting model is to be used. In each scenario different model can turn out to be the best.
+It&rsquo;s always a trade-off and the better we understand the goals, the better decisions we make.</p>
+<h1 id=the-basic-steps-in-a-forecasting-task>The basic steps in a forecasting task<a hidden class=anchor aria-hidden=true href=#the-basic-steps-in-a-forecasting-task>#</a></h1>
+<p>The framework usually involves five basic steps, common for modeling.</p>
+<p><strong>Step 1: Problem definition</strong>
+Often the most difficult part - who requires the forecasts, how the forecasting function fits within the organisation requiring the forecasts.
+This step needs some time spend on talking to everyone who will be involved in collecting data, maintaining databases and using forecasts for future planning.</p>
+<p><strong>Step 2: Gathering information</strong>
+We need the data and accumulated expertise of the people who collect it and use the forecasts. Often it&rsquo;s difficult to obtain enough historical data to be able
+to fit a good model. In that case, judgmental forecasting methods can be considered. Occasionally, old data can be less useful due to structural changes in the system being forecast -
+we may choose then to use only the most recent data. However good models may handle evolutionary changes in the system so don&rsquo;t throw away good data unnecessarily.</p>
+<p><strong>Step 3: Exploratory analysis</strong>
+Always start by graphing the data. Are there consistent patterns? Is there a trend? Is seasonality visible/important? Is there a presence of business cycles? Are there any outliers that need to
+be explained by subject matter experts?</p>
+<p><strong>Step 4: Choosing and fitting models</strong>
+Each model is an artificial construct that is based on a set of assumptions. The best model to use depends on the availability of historical data, the strength of relationship between the forecast variable and
+explanatory variables and the way in which the forecasts are to be used. It&rsquo;s common to compare multiple ones with varying underlying mechanisms</p>
+<p><strong>Step 5: Using and evaluating a forecasting model</strong>
+Once a model has been selected and trained, it&rsquo;s used to make forecasts. The performance of the model has to be continuously monitored and evaluated.
+There may be multiple challenges waiting - from practical ones such as missing values and outliers to organizational like acting on the forecasts.</p>
+</div>
+<footer class=post-footer>
+<nav class=paginav>
+<a class=next href=/posts/introduction-to-hidden-markov-model/>
+<span class=title>Next Page »</span>
+<br>
+<span>Introduction to Hidden Markov Model</span>
+</a>
+</nav>
+<div class=share-buttons>
+<a target=_blank rel="noopener noreferrer" aria-label="share Introduction to Time Series on twitter" href="https://twitter.com/intent/tweet/?text=Introduction%20to%20Time%20Series&url=%2fposts%2fintroduction-to-time-series%2f&hashtags="><svg viewBox="0 0 512 512"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM195.519 424.544c135.939.0 210.268-112.643 210.268-210.268.0-3.218.0-6.437-.153-9.502 14.406-10.421 26.973-23.448 36.935-38.314-13.18 5.824-27.433 9.809-42.452 11.648 15.326-9.196 26.973-23.602 32.49-40.92-14.252 8.429-30.038 14.56-46.896 17.931-13.487-14.406-32.644-23.295-53.946-23.295-40.767.0-73.87 33.104-73.87 73.87.0 5.824.613 11.494 1.992 16.858-61.456-3.065-115.862-32.49-152.337-77.241-6.284 10.881-9.962 23.601-9.962 37.088.0 25.594 13.027 48.276 32.95 61.456-12.107-.307-23.448-3.678-33.41-9.196v.92c0 35.862 25.441 65.594 59.311 72.49-6.13 1.686-12.72 2.606-19.464 2.606-4.751.0-9.348-.46-13.946-1.38 9.349 29.426 36.628 50.728 68.965 51.341-25.287 19.771-57.164 31.571-91.8 31.571-5.977.0-11.801-.306-17.625-1.073 32.337 21.15 71.264 33.41 112.95 33.41z"/></svg>
+</a>
+<a target=_blank rel="noopener noreferrer" aria-label="share Introduction to Time Series on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&url=%2fposts%2fintroduction-to-time-series%2f&title=Introduction%20to%20Time%20Series&summary=Introduction%20to%20Time%20Series&source=%2fposts%2fintroduction-to-time-series%2f"><svg viewBox="0 0 512 512"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg>
+</a>
+<a target=_blank rel="noopener noreferrer" aria-label="share Introduction to Time Series on reddit" href="https://reddit.com/submit?url=%2fposts%2fintroduction-to-time-series%2f&title=Introduction%20to%20Time%20Series"><svg viewBox="0 0 512 512"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg>
+</a>
+<a target=_blank rel="noopener noreferrer" aria-label="share Introduction to Time Series on facebook" href="https://facebook.com/sharer/sharer.php?u=%2fposts%2fintroduction-to-time-series%2f"><svg viewBox="0 0 512 512"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg>
+</a>
+<a target=_blank rel="noopener noreferrer" aria-label="share Introduction to Time Series on whatsapp" href="https://api.whatsapp.com/send?text=Introduction%20to%20Time%20Series%20-%20%2fposts%2fintroduction-to-time-series%2f"><svg viewBox="0 0 512 512"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg>
+</a>
+<a target=_blank rel="noopener noreferrer" aria-label="share Introduction to Time Series on telegram" href="https://telegram.me/share/url?text=Introduction%20to%20Time%20Series&url=%2fposts%2fintroduction-to-time-series%2f"><svg viewBox="2 2 28 28"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg>
+</a>
+</div>
+</footer>
+</article>
+</main>
+<footer class=footer>
+<span>&copy; 2021 <a href>Marcin Halupka</a></span>
+<span>
+Powered by
+<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
+        <a href=https://git.io/hugopapermod rel=noopener target=_blank>PaperMod</a>
+</span>
+</footer>
+<a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
+</a>
+<script>let menu=document.getElementById('menu');menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)},document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener("click",function(b){b.preventDefault();var a=this.getAttribute("href").substr(1);window.matchMedia('(prefers-reduced-motion: reduce)').matches?document.querySelector(`[id='${decodeURIComponent(a)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(a)}']`).scrollIntoView({behavior:"smooth"}),a==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${a}`)})})</script>
+<script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script>
+<script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove('dark'),localStorage.setItem("pref-theme",'light')):(document.body.classList.add('dark'),localStorage.setItem("pref-theme",'dark'))})</script>
+<script>MathJax={tex:{inlineMath:[["$","$"],["\\(","\\)"]],displayMath:[["$$","$$"],["\\[","\\]"]],processEscapes:!0,processEnvironments:!0},options:{skipHtmlTags:["script","noscript","style","textarea","pre"]}},window.addEventListener("load",a=>{document.querySelectorAll("mjx-container").forEach(function(a){a.parentElement.classList+="has-jax"})})</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type=text/javascript id=MathJax-script async src=https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js></script>
+</body>
+</html>
