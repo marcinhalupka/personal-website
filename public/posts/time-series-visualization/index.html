@@ -1,0 +1,515 @@
+<!doctype html><html lang=en dir=auto>
+<head><meta charset=utf-8>
+<meta http-equiv=x-ua-compatible content="IE=edge">
+<meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no">
+<meta name=robots content="index, follow">
+<title>Time Series Visualization | Marcin Halupka</title>
+<meta name=keywords content>
+<meta name=description content="The first thing to do in any data analysis is to plot the data. Graphs enable many features of the data to be visualized, including patterns, unusual observations, changes over time and relationships between the data. Just as the type of data determines what forecasting methods to use, it also determines what graphs are appropriate.
+Ts objects A time series can be thought as a list of numbers, along with some information about what times those numbers were recorded.">
+<meta name=author content="Marcin Halupka">
+<link rel=canonical href=/posts/time-series-visualization/>
+<meta name=google-site-verification content="XYZabc">
+<meta name=yandex-verification content="XYZabc">
+<meta name=msvalidate.01 content="XYZabc">
+<link crossorigin=anonymous href=/assets/css/stylesheet.min.6f60056d44d3f7eb69a4bc6c332b59960f3a995802bded244750232f33713c49.css integrity="sha256-b2AFbUTT9+tppLxsMytZlg86mVgCve0kR1AjLzNxPEk=" rel="preload stylesheet" as=style>
+<script defer crossorigin=anonymous src=/assets/js/highlight.min.7680afc38aa6b15ddf158a4f3780b7b1f7dde7e91d26f073e6229bb7a0793c92.js integrity="sha256-doCvw4qmsV3fFYpPN4C3sffd5+kdJvBz5iKbt6B5PJI=" onload=hljs.initHighlightingOnLoad()></script>
+<link rel=icon href=%3Clink%20/%20abs%20url%3E>
+<link rel=icon type=image/png sizes=16x16 href=%3Clink%20/%20abs%20url%3E>
+<link rel=icon type=image/png sizes=32x32 href=%3Clink%20/%20abs%20url%3E>
+<link rel=apple-touch-icon href=%3Clink%20/%20abs%20url%3E>
+<link rel=mask-icon href=%3Clink%20/%20abs%20url%3E>
+<meta name=theme-color content="#2e2e33">
+<meta name=msapplication-TileColor content="#2e2e33">
+<meta name=generator content="Hugo 0.88.1">
+<noscript>
+<style>#theme-toggle,.top-link{display:none}</style>
+<style>@media(prefers-color-scheme:dark){:root{--theme:rgb(29, 30, 32);--entry:rgb(46, 46, 51);--primary:rgb(218, 218, 219);--secondary:rgb(155, 156, 157);--tertiary:rgb(65, 66, 68);--content:rgb(196, 196, 197);--hljs-bg:rgb(46, 46, 51);--code-bg:rgb(55, 56, 62);--border:rgb(51, 51, 51)}.list{background:var(--theme)}.list:not(.dark)::-webkit-scrollbar-track{background:0 0}.list:not(.dark)::-webkit-scrollbar-thumb{border-color:var(--theme)}}</style>
+</noscript>
+<script type=application/javascript>var doNotTrack=!1;doNotTrack||(function(a,e,f,g,b,c,d){a.GoogleAnalyticsObject=b,a[b]=a[b]||function(){(a[b].q=a[b].q||[]).push(arguments)},a[b].l=1*new Date,c=e.createElement(f),d=e.getElementsByTagName(f)[0],c.async=1,c.src=g,d.parentNode.insertBefore(c,d)}(window,document,'script','https://www.google-analytics.com/analytics.js','ga'),ga('create','UA-123-45','auto'),ga('send','pageview'))</script><meta property="og:title" content="Time Series Visualization">
+<meta property="og:description" content="The first thing to do in any data analysis is to plot the data. Graphs enable many features of the data to be visualized, including patterns, unusual observations, changes over time and relationships between the data. Just as the type of data determines what forecasting methods to use, it also determines what graphs are appropriate.
+Ts objects A time series can be thought as a list of numbers, along with some information about what times those numbers were recorded.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="/posts/time-series-visualization/"><meta property="og:image" content="%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E"><meta property="article:section" content="posts">
+<meta property="article:published_time" content="2021-10-26T23:36:17+02:00">
+<meta property="article:modified_time" content="2021-10-26T23:36:17+02:00"><meta property="og:site_name" content="ExampleSite">
+<meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E">
+<meta name=twitter:title content="Time Series Visualization">
+<meta name=twitter:description content="The first thing to do in any data analysis is to plot the data. Graphs enable many features of the data to be visualized, including patterns, unusual observations, changes over time and relationships between the data. Just as the type of data determines what forecasting methods to use, it also determines what graphs are appropriate.
+Ts objects A time series can be thought as a list of numbers, along with some information about what times those numbers were recorded.">
+<script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":2,"name":"Posts","item":"/posts/"},{"@type":"ListItem","position":3,"name":"Time Series Visualization","item":"/posts/time-series-visualization/"}]}</script>
+<script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Time Series Visualization","name":"Time Series Visualization","description":"The first thing to do in any data analysis is to plot the data. Graphs enable many features of the data to be visualized, including patterns, unusual observations, changes over time and relationships between the data. Just as the type of data determines what forecasting methods to use, it also determines what graphs are appropriate.\nTs objects A time series can be thought as a list of numbers, along with some information about what times those numbers were recorded.","keywords":[],"articleBody":"The first thing to do in any data analysis is to plot the data. Graphs enable many features of the data to be visualized, including patterns, unusual observations, changes over time and relationships between the data. Just as the type of data determines what forecasting methods to use, it also determines what graphs are appropriate.\nTs objects A time series can be thought as a list of numbers, along with some information about what times those numbers were recorded. This information can be stored as a ts object in R.\nLet’s say we have annual observations for the last few years:\n   Year Obsevation     2016 123   2017 39   2018 78   2019 52   2020 110    We can turn this into a ts object using the ts() function:\ny  ts(c(123, 39, 78, 52, 110), start=2015) If the data is annual (one observation per year), it’s enough to provide the starting year.\nFor observations that are more frequent than once per year, simply add a frequency argument. For example, if we store a monthly data as a numerical vector z, then we can convert it to a ts object like this:\nz  ts(y, start=2015, frequency=12) While working with R, ts objects are really convenient for handling time series data.\nThe frequency is the number of observations before the seasonal pattern repeats. You could argue that period would be a better name for the argument, but it is what it is. When you’re using the ts() function in R, you can use the following values for this parameter:\n   Data Obsevation     Annual 1   Quarterly 4   Monthly 12   Weekly 52    If you noticed that on average there are not 52 weeks in a year than you’re right - we have a leap year every fourth year. But most functions which use ts objects require integer frequency.\nIf the frequency of observations is greater than once per week or different than presented options, you must decide what is the appropriate value. For example, data with daily observations may have a weekly seasonality (frequency = 7), data observed every minute may have an hourly seasonality (frequency = 60) or a daily seasonality (frequency = 24 * 60 = 1440).\nTime plots The most obvious graph to start with time series data is a time plot. That is the observations plotted against the time of observation, with consecutive observations joined by straight lines.\nFigure below shows the weekly economy passenger load on Ansett Airlines between Australia’s two largest cities.\nautoplot(melsyd[,\"Economy.Class\"]) + ggtitle(\"Economy class passengers: Melbourne-Sydney\\n\") + xlab(\"\\nYear\") + ylab(\"Thousands\\n\") + theme_minimal() + theme(plot.title = element_text(hjust = 0.5)) In R you can use the command autoplot() to automatically produce an appropriate plot of whatever you pass to it as a first argument. In this case, a time series was recognized and a time plot was produced.\nOne simple plot and we immediately see some interesting features:\n There was a period in 1989 when no passengers were carried - caused by an industrial dispute There was a period of reduced load in 1992. This was caused by a trial in which some economy class seats were replaced by business class seats. A large increase in passenger load occurred in the second half of 1991. There are some large dips in load around the start of each year - caused by holiday effects. There is a long-term fluctuation in the level of the series which increases during 1987, decreases in 1989 and increases again through 1990 and 1991. There are some periods of missing observations.  Any model will need to take all these features into account in order to effectively forecast the passenger load into the future.\nA simpler example is presented below.\nautoplot(a10) + ggtitle(\"Antidiabetic drug sales\\n\") + ylab(\"$ million\\n\") + xlab(\"\\nYear\") + theme_minimal() + theme(plot.title = element_text(hjust = 0.5)) The trend is clear and increasing here. You can also see a strong seasonal pattern that increases in size as the level of series increases. The sudden drop at the start of each year is caused by a government subsidisation scheme that makes it cost-effective for patients to stockpile drugs at the end of calendar year. Forecasting model here would have to capture the seasonal pattern and the slowly changing trend.\nTime series patterns We’ve been using so far words like trend and seasonal which need to be defined precisely.\nTrend exists then there is a long-term increase or decrease in the data. It doesn’t have to be linear.\nSeasonal pattern occurs when a time series is affected by seasonal factors like the time of the year or the day of the week. It’s always of a fixed and known frequency.\nCyclic behaviour (often confused with seasonal behaviour) occurs when the data exhibit rises and falls that are not of a fixed frequency. These happen often due to economic conditions and are related to the business cycle\nThe examples below show different combinations of described components.\n  The monthly housing sales (top left) show strong seasonality within each year and some cyclic behaviour with a period of about 6-10 years. No trend is visible here.\n  The US treasury bill contracts (top right) show results from the Chicage market for 100 consecutive trading days in 1981. Here there is no seasonality but an obvious downward trend. If we had much longer series, we would see that this is actually part of a long cycle, but when viewed over only 100 days it appears to be a trend.\n  The Australian quarterly electricity production (bottom left) shows a strong increasing trend with strong seasonality. No signs of any cyclic behaviour here.\n  The daily change in the Google closing stock price (bottom right) has no trend, seasonality and cyclic behaviour. It looks like random fluctuations - not very predictable.\n  Seasonal plots Seasonal plot is similar to a time plot but the data is plotted against the individual seasons. An example will be presented using antidiabetic drug sales data.\nggseasonplot(a10, year.labels=TRUE, year.labels.left=TRUE) + ylab(\"$ million\\n\") + xlab(\"\\nMonth\") + ggtitle(\"Seasonal plot: antidiabetic drug sales\\n\") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) The data is the same as before, we just presented each season separately so we can see the pattern more clearly.\nThere is a large jump in sales in January each year. Actually, these are probably sales in late December as customers stockpile before the end of calendar year but the sales are not registered with the government until a week or two later. The graph also shows that there was an unusually small number of sales in March 2008 (for other years there’s an increase between February and March). The small amount of sales in June 2008 may be caused by incomplete counting at the time of data collection.\nA useful variation of the seasonal plot uses polar coordinates. Setting polar=TRUE makes the time series axis circular.\nggseasonplot(a10, polar=TRUE) + ylab(\"$ million\\n\") + xlab(\"\\nMonth\") + ggtitle(\"Seasonal plot: antidiabetic drug sales\\n\") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) Seasonal subseries plots Another visualization idea that can be useful for seasonal patterns analysis is to plot the data for each season in separate mini time plots.\nggsubseriesplot(a10) + ylab(\"$ million\\n\") + xlab(\"\\nMonth\") + ggtitle(\"Seasonal subseries plot: antidiabetic drug sales\\n\") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) The horizontal lines present the means for each month. This form of plot shows the changes of seasonality over time. It can be especially useful in identifying changes within particular seasons.\nScatterplots We know how to visualize individual time series. It’s also useful to explore relationships between time series.\nthe next figure shows two time series: half-hourly electricity demand (in gigawatts) and temperature (in degrees Celsius) for 2014 in Victoria, Australia. the temperatures are for Melbourne, the largest city in Victoria, while demand values are for the entire state.\ndate_transform  function(x) {format(date_decimal(x), \"%b %Y\")} autoplot(elecdemand[,c(\"Demand\",\"Temperature\")], facets=TRUE) + xlab(\"\\nYear: 2014\") + scale_x_continuous(labels=date_transform) + ylab(\"\") + ggtitle(\"Half-hourly electricity demand: Victoria, Australia\\n\") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) We can study the relationship between demand and temperature by plotting one series against the other.\nqplot(Temperature, Demand, data=as.data.frame(elecdemand)) + ylab(\"Demand (GW)\\n\") + xlab(\"\\nTemperature (Celsius)\") + theme_minimal() Now it’s clear that high demand occurs when temperatures are high due to effect of air-conditioning. But there’s also a heating effect where demand increases for very low temperatures.\nCorrelation It’s hard to skip the correlation when talking about the scatterplots. Correlation coefficient measures the strength of the relationsip between two variables. The mathematical formula for a correlation between variables $x$ and $y$ is given by:\n$$ r = \\frac{\\sum (x_{t} - \\bar{x})(y_{t}-\\bar{y})}{\\sqrt{\\sum(x_{t}-\\bar{x})^2}\\sqrt{\\sum(y_{t}-\\bar{y})^2}}. $$\nThe value of $r$ is normalized - it always lies between -1 and 1 with negative values indicating a negative relationship and positive values indicating a positive relationship. The graphs below show examples of datasets with varying levels of correlation.\nImportant remark - correlation coefficient only measures the strength of the linear relationship and can sometimes be misleading. Correlation between the electricity demand and temperature data presented earlier is 0.28 but the non-linear relationsjip is stronger than that.\nThe plots below present various datasets and for each a correlation coefficient was calculated.\nYou can see that in some cases despite correlation coefficient equal to zero, the relationship is clear. That shows how important is to look at the graphs and not simply rely on correlation values.\nScatterplot matrices When there are several potential predictor variables, it’s useful to plot each variable against remaining ones. Let’s have a look at five time series presenting quarterly visitor numbers for five regions of New South Wales, Australia.\nautoplot(visnights[,1:5], facets=TRUE) + ylab(\"Number of visitor nights each quarter (millions)\\n\") + xlab(\"\") + theme_minimal() To see relationship between these five time series, we can plot each time series against remaining ones. These plots can be arranged in a scatterplot matrix.\nGGally::ggpairs(as.data.frame(visnights[,1:5]), lower=list(continuous=wrap(\"points\", size=0.8))) + theme_minimal() For each panel, the variable on the vertical axis is given by the variable name in that row and the variable on the horizontal axis is given by the variable name in that column. There are many options available to produce different plots within each panel. In the default version the correlation coefficients are shown in the upper right half of the plot, the scatterplots are shown in the lower left half and the density plots are shown on the diagonal.\nThis visualization enables a quick view of the relationships between all pairs of variables. In our example, the second column of plots shows there is a strong positive relationship between visitors to the NSW North Coast and visitors to the NSW South Coast but no detectable relationship between visitors to the NSW North Coast and visitors to the NSW South Inland. We can see some outliers and unusually high quarter for the NSW Metropolitan region, corresponding to the 2000 Sydney Olympics. This is the most easily seen in the first two plots in the left column, the largest value for NSW Metro is separate from the main cloud of obsevations.\nLag plots The next graph displays scatterplots of quarterly Australian beer production where the horizontal axis shows lagged values of the time series. Each graph shows $y_t$ plotted agains $y_{t-k}$ for different values of $k$.\nbeer2  window(ausbeer, start=1992) gglagplot(beer2, do.lines=FALSE) + theme_minimal() Here the colours indicate the quarter of the variable on the vertical axis. The relationship is strongly positive at lags 4 and 8, reflecting the strong seasonality in data. The negative relationship seen for lags 2 and 6 occurs because peaks (in Q4) are plotted against troughs (in Q2).\nthe window() function used here is useful when extracting a portion of a time series. In this case, we have extracted the data from ausbeer, beginning in 1992.\nAutocorrelation Just as correlation measures the extent of a linear relationship between two variables, autocorrelation measures the linear relationship between lagged values of a time series.\nThere are several autocorrelation coefficients, corresponding to each panel in the lag plot. For example $r_1$ measures the relationship between $y_t$ and $y_{t-1}$, $r_2$ measures the relationship between $y_t$ and $y_{t-2}$ and so on.\nThe value of $r_k$ can be written as:\n$$ r_{k} = \\frac{\\sum\\limits_{t=k+1}^T (y_{t}-\\bar{y})(y_{t-k}-\\bar{y})} {\\sum\\limits_{t=1}^T (y_{t}-\\bar{y})^2}, $$\nwhere $T$ is the length of the time series.\nThe first nine autocorrelation coefficients for the beer production data are given in the following table.\n   $r_1$ $r_2$ $r_3$ $r_4$ $r_5$ $r_6$ $r_7$ $r_8$ $r_9$     -0.102 -0.657 -0.060 0.869 -0.089 -0.635 -0.054 0.832 -0.108    These numbers correspond to previous nine scatterplots. The autocorrelation coefficients are plotted to show the autocorrelaction function or ACF. The plot is known as a correlogram.\nggAcf(beer2) + ylab(\"ACF\\n\") + xlab(\"\\nLag\") + ggtitle(\"Series: beer2\\n\") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) In this graph:\n  $r_4$ is higher than values for other lags. This is due to the presence of seasonal pattern in the data - peaks tend to be four quarters apart, same as troughs.\n  $r_2$ is smaller than values fot other lags - troughs tend to be two quarters behind peaks.\n  The dashed blue lines indicate whether the correlations are significantly different from zero.\n  Trend and seasonality in ACF plots Then data have a trend, the autocorrelations for small lags tend do be large and positive because observations nearby in time are also nearby in size. So the ACF of a time series with trend tend to have positive values that slowly decrease as the lags increase.\nWhen data are seasonal, the autocorrelations will be larger for the seasonal lags (at multiples of the seasonal frequency) than for other lags.\nWhen data are both trended and seasonal, you can see a combination of these effects. The monthly Australian electricity demand series plotted below shows both trend and seasonality. It’s followed by its ACF.\naelec  window(elec, start=1980) autoplot(aelec) + xlab(\"\\nYear\") + ylab(\"GWh\\n\") + ggtitle(\"Monthly Australian electricity demand 1980-1995\\n\") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) ggAcf(aelec, lag=48) + ylab(\"ACF\\n\") + xlab(\"\\nLag\") + ggtitle(\"ACF of monthly Australian electricity demand\\n\") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) The slow decrease in the ACF as the lags increase is due to the trend while the bumps are due to the seasonality.\nWhite noise Time series that show no autocorrelation are called whie noise. The figure below presents an example of a white noise series.\nset.seed(42) y  ts(rnorm(50)) autoplot(y) + ylab(\"y\\n\") + xlab(\"\\nTime\") + ggtitle(\"A white noise time series\\n\") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) ggAcf(y) + ylab(\"ACF\\n\") + xlab(\"\\nLag\") + ggtitle(\"ACF for the white noise series\\n\") + theme_minimal() + theme(plot.title = element_text(hjust=0.5)) For the white noise we expect each autocorrelation to be close to zero (not equal, as there is some random variation). We expect 95% of the spikes in the ACF to lie within $\\pm 2/\\sqrt{T}$ where $T$ is the length of the time series. It’s common to plot these bounds on a graph of the ACF (blue dashed lines). If one or more large spikes are outside these bounds or if substantially more than 5% of spikes are outside, then the series is probably not the white noise.\n","wordCount":"2478","inLanguage":"en","datePublished":"2021-10-26T23:36:17+02:00","dateModified":"2021-10-26T23:36:17+02:00","author":{"@type":"Person","name":"Marcin Halupka"},"mainEntityOfPage":{"@type":"WebPage","@id":"/posts/time-series-visualization/"},"publisher":{"@type":"Organization","name":"Marcin Halupka","logo":{"@type":"ImageObject","url":"%3Clink%20/%20abs%20url%3E"}}}</script>
+</head>
+<body id=top>
+<script>localStorage.getItem("pref-theme")==="dark"?document.body.classList.add('dark'):localStorage.getItem("pref-theme")==="light"?document.body.classList.remove('dark'):window.matchMedia('(prefers-color-scheme: dark)').matches&&document.body.classList.add('dark')</script>
+<header class=header>
+<nav class=nav>
+<div class=logo>
+<a href accesskey=h title="Marcin Halupka (Alt + H)">Marcin Halupka</a>
+<span class=logo-switches>
+<button id=theme-toggle accesskey=t title="(Alt + T)"><svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+</button>
+</span>
+</div>
+<ul id=menu>
+<li>
+<a href=/posts/ title=Posts>
+<span>Posts</span>
+</a>
+</li>
+<li>
+<a href=/projects/ title=Projects>
+<span>Projects</span>
+</a>
+</li>
+<li>
+<a href=/about/ title="About me">
+<span>About me</span>
+</a>
+</li>
+</ul>
+</nav>
+</header>
+<main class=main>
+<article class=post-single>
+<header class=post-header>
+<div class=breadcrumbs><a href>Home</a>&nbsp;»&nbsp;<a href=/posts/>Posts</a></div>
+<h1 class=post-title>
+Time Series Visualization
+</h1>
+<div class=post-meta>October 26, 2021&nbsp;·&nbsp;12 min&nbsp;·&nbsp;Marcin Halupka&nbsp;|&nbsp;<a href=https://github.com/%3cpath_to_repo%3e/content/posts/time-series-visualization.md rel="noopener noreferrer" target=_blank>Suggest Changes</a>
+</div>
+</header> <div class=toc>
+<details open>
+<summary accesskey=c title="(Alt + C)">
+<span class=details>Table of Contents</span>
+</summary>
+<div class=inner><ul>
+<li>
+<a href=#ts-objects aria-label="Ts objects">Ts objects</a></li>
+<li>
+<a href=#time-plots aria-label="Time plots">Time plots</a></li>
+<li>
+<a href=#time-series-patterns aria-label="Time series patterns">Time series patterns</a></li>
+<li>
+<a href=#seasonal-plots aria-label="Seasonal plots">Seasonal plots</a></li>
+<li>
+<a href=#seasonal-subseries-plots aria-label="Seasonal subseries plots">Seasonal subseries plots</a></li>
+<li>
+<a href=#scatterplots aria-label=Scatterplots>Scatterplots</a><ul>
+<li>
+<a href=#correlation aria-label=Correlation>Correlation</a></li>
+<li>
+<a href=#scatterplot-matrices aria-label="Scatterplot matrices">Scatterplot matrices</a></li></ul>
+</li>
+<li>
+<a href=#lag-plots aria-label="Lag plots">Lag plots</a></li>
+<li>
+<a href=#autocorrelation aria-label=Autocorrelation>Autocorrelation</a><ul>
+<li>
+<a href=#trend-and-seasonality-in-acf-plots aria-label="Trend and seasonality in ACF plots">Trend and seasonality in ACF plots</a></li></ul>
+</li>
+<li>
+<a href=#white-noise aria-label="White noise">White noise</a>
+</li>
+</ul>
+</div>
+</details>
+</div>
+<div class=post-content><p>The first thing to do in any data analysis is to plot the data. Graphs enable many features of the data to be visualized, including patterns, unusual observations,
+changes over time and relationships between the data. Just as the type of data determines what forecasting methods to use, it also determines what graphs are appropriate.</p>
+<h1 id=ts-objects>Ts objects<a hidden class=anchor aria-hidden=true href=#ts-objects>#</a></h1>
+<p>A time series can be thought as a list of numbers, along with some information about what times those numbers were recorded. This information can be stored as a <code>ts</code> object in R.</p>
+<p>Let&rsquo;s say we have annual observations for the last few years:</p>
+<table>
+<thead>
+<tr>
+<th>Year</th>
+<th>Obsevation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2016</td>
+<td>123</td>
+</tr>
+<tr>
+<td>2017</td>
+<td>39</td>
+</tr>
+<tr>
+<td>2018</td>
+<td>78</td>
+</tr>
+<tr>
+<td>2019</td>
+<td>52</td>
+</tr>
+<tr>
+<td>2020</td>
+<td>110</td>
+</tr>
+</tbody>
+</table>
+<p>We can turn this into a <code>ts</code> object using the <code>ts()</code> function:</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-r data-lang=r>y <span style=color:#f92672>&lt;-</span> <span style=color:#a6e22e>ts</span>(<span style=color:#a6e22e>c</span>(<span style=color:#ae81ff>123</span>, <span style=color:#ae81ff>39</span>, <span style=color:#ae81ff>78</span>, <span style=color:#ae81ff>52</span>, <span style=color:#ae81ff>110</span>), start<span style=color:#f92672>=</span><span style=color:#ae81ff>2015</span>)
+</code></pre></div><p>If the data is annual (one observation per year), it&rsquo;s enough to provide the starting year.</p>
+<p>For observations that are more frequent than once per year, simply add a <code>frequency</code> argument. For example, if we store a monthly data as a numerical vector <code>z</code>, then we can
+convert it to a <code>ts</code> object like this:</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-r data-lang=r>z <span style=color:#f92672>&lt;-</span> <span style=color:#a6e22e>ts</span>(y, start<span style=color:#f92672>=</span><span style=color:#ae81ff>2015</span>, frequency<span style=color:#f92672>=</span><span style=color:#ae81ff>12</span>)
+</code></pre></div><p>While working with R, <code>ts</code> objects are really convenient for handling time series data.</p>
+<p>The <code>frequency</code> is the number of observations before the seasonal pattern repeats. You could argue that <code>period</code> would be a better name for the argument, but it is what it is.
+When you&rsquo;re using the <code>ts()</code> function in R, you can use the following values for this parameter:</p>
+<table>
+<thead>
+<tr>
+<th>Data</th>
+<th>Obsevation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Annual</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Quarterly</td>
+<td>4</td>
+</tr>
+<tr>
+<td>Monthly</td>
+<td>12</td>
+</tr>
+<tr>
+<td>Weekly</td>
+<td>52</td>
+</tr>
+</tbody>
+</table>
+<p>If you noticed that on average there are not 52 weeks in a year than you&rsquo;re right - we have a leap year every fourth year. But most functions which use <code>ts</code> objects require integer frequency.</p>
+<p>If the frequency of observations is greater than once per week or different than presented options, you must decide what is the appropriate value. For example, data with daily observations may have a weekly
+seasonality (<code>frequency = 7</code>), data observed every minute may have an hourly seasonality (<code>frequency = 60</code>) or a daily seasonality (<code>frequency = 24 * 60 = 1440</code>).</p>
+<h1 id=time-plots>Time plots<a hidden class=anchor aria-hidden=true href=#time-plots>#</a></h1>
+<p>The most obvious graph to start with time series data is a time plot. That is the observations plotted against the time of observation, with consecutive observations joined by straight lines.</p>
+<p>Figure below shows the weekly economy passenger load on Ansett Airlines between Australia&rsquo;s two largest cities.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-r data-lang=r><span style=color:#a6e22e>autoplot</span>(melsyd[,<span style=color:#e6db74>&#34;Economy.Class&#34;</span>]) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>ggtitle</span>(<span style=color:#e6db74>&#34;Economy class passengers: Melbourne-Sydney\n&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>xlab</span>(<span style=color:#e6db74>&#34;\nYear&#34;</span>) <span style=color:#f92672>+</span> 
+  <span style=color:#a6e22e>ylab</span>(<span style=color:#e6db74>&#34;Thousands\n&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>theme_minimal</span>() <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>theme</span>(plot.title <span style=color:#f92672>=</span> <span style=color:#a6e22e>element_text</span>(hjust <span style=color:#f92672>=</span> <span style=color:#ae81ff>0.5</span>))
+</code></pre></div><p><img loading=lazy src=/posts/images/ts_economy_class_passengers.png alt="Time plot 1">
+</p>
+<p>In R you can use the command <code>autoplot()</code> to automatically produce an appropriate plot of whatever you pass to it as a first argument. In this case, a time series was recognized and a time plot was produced.</p>
+<p>One simple plot and we immediately see some interesting features:</p>
+<ul>
+<li>There was a period in 1989 when no passengers were carried - caused by an industrial dispute</li>
+<li>There was a period of reduced load in 1992. This was caused by a trial in which some economy class seats were replaced by business class seats.</li>
+<li>A large increase in passenger load occurred in the second half of 1991.</li>
+<li>There are some large dips in load around the start of each year - caused by holiday effects.</li>
+<li>There is a long-term fluctuation in the level of the series which increases during 1987, decreases in 1989 and increases again through 1990 and 1991.</li>
+<li>There are some periods of missing observations.</li>
+</ul>
+<p>Any model will need to take all these features into account in order to effectively forecast the passenger load into the future.</p>
+<p>A simpler example is presented below.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-r data-lang=r><span style=color:#a6e22e>autoplot</span>(a10) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>ggtitle</span>(<span style=color:#e6db74>&#34;Antidiabetic drug sales\n&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>ylab</span>(<span style=color:#e6db74>&#34;$ million\n&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>xlab</span>(<span style=color:#e6db74>&#34;\nYear&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>theme_minimal</span>() <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>theme</span>(plot.title <span style=color:#f92672>=</span> <span style=color:#a6e22e>element_text</span>(hjust <span style=color:#f92672>=</span> <span style=color:#ae81ff>0.5</span>))
+</code></pre></div><p><img loading=lazy src=/posts/images/ts_antidiabetic_drug_sales.png alt="Time plot 2">
+</p>
+<p>The trend is clear and increasing here. You can also see a strong seasonal pattern that increases in size as the level of series increases. The sudden drop at the start of each year is
+caused by a government subsidisation scheme that makes it cost-effective for patients to stockpile drugs at the end of calendar year. Forecasting model here would have to capture the seasonal pattern
+and the slowly changing trend.</p>
+<h1 id=time-series-patterns>Time series patterns<a hidden class=anchor aria-hidden=true href=#time-series-patterns>#</a></h1>
+<p>We&rsquo;ve been using so far words like <code>trend</code> and <code>seasonal</code> which need to be defined precisely.</p>
+<p><strong>Trend</strong> exists then there is a long-term increase or decrease in the data. It doesn&rsquo;t have to be linear.</p>
+<p><strong>Seasonal</strong> pattern occurs when a time series is affected by seasonal factors like the time of the year or the day of the week. It&rsquo;s always of a fixed and known frequency.</p>
+<p><strong>Cyclic</strong> behaviour (often confused with seasonal behaviour) occurs when the data exhibit rises and falls that are not of a fixed frequency. These happen often due to economic conditions and are related to the <em>business cycle</em></p>
+<p>The examples below show different combinations of described components.</p>
+<p><img loading=lazy src=/posts/images/ts_pattern_examples.png alt="Time plot 3">
+</p>
+<ol>
+<li>
+<p>The monthly housing sales (top left) show strong seasonality within each year and some cyclic behaviour with a period of about 6-10 years. No trend is visible here.</p>
+</li>
+<li>
+<p>The US treasury bill contracts (top right) show results from the Chicage market for 100 consecutive trading days in 1981. Here there is no seasonality but an obvious downward trend. If we had much longer series,
+we would see that this is actually part of a long cycle, but when viewed over only 100 days it appears to be a trend.</p>
+</li>
+<li>
+<p>The Australian quarterly electricity production (bottom left) shows a strong increasing trend with strong seasonality. No signs of any cyclic behaviour here.</p>
+</li>
+<li>
+<p>The daily change in the Google closing stock price (bottom right) has no trend, seasonality and cyclic behaviour. It looks like random fluctuations - not very predictable.</p>
+</li>
+</ol>
+<h1 id=seasonal-plots>Seasonal plots<a hidden class=anchor aria-hidden=true href=#seasonal-plots>#</a></h1>
+<p>Seasonal plot is similar to a time plot but the data is plotted against the individual <em>seasons</em>. An example will be presented using antidiabetic drug sales data.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-r data-lang=r><span style=color:#a6e22e>ggseasonplot</span>(a10, year.labels<span style=color:#f92672>=</span><span style=color:#66d9ef>TRUE</span>, year.labels.left<span style=color:#f92672>=</span><span style=color:#66d9ef>TRUE</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>ylab</span>(<span style=color:#e6db74>&#34;$ million\n&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>xlab</span>(<span style=color:#e6db74>&#34;\nMonth&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>ggtitle</span>(<span style=color:#e6db74>&#34;Seasonal plot: antidiabetic drug sales\n&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>theme_minimal</span>() <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>theme</span>(plot.title <span style=color:#f92672>=</span> <span style=color:#a6e22e>element_text</span>(hjust<span style=color:#f92672>=</span><span style=color:#ae81ff>0.5</span>))
+</code></pre></div><p><img loading=lazy src=/posts/images/ts_plot_seasonal.png alt="Time plot 4">
+</p>
+<p>The data is the same as before, we just presented each season separately so we can see the pattern more clearly.</p>
+<p>There is a large jump in sales in January each year. Actually, these are probably sales in late December as customers stockpile before the end of calendar year but the sales are not registered
+with the government until a week or two later. The graph also shows that there was an unusually small number of sales in March 2008 (for other years there&rsquo;s an increase between February and March). The small amount of sales in
+June 2008 may be caused by incomplete counting at the time of data collection.</p>
+<p>A useful variation of the seasonal plot uses polar coordinates. Setting <code>polar=TRUE</code> makes the time series axis circular.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-r data-lang=r><span style=color:#a6e22e>ggseasonplot</span>(a10, polar<span style=color:#f92672>=</span><span style=color:#66d9ef>TRUE</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>ylab</span>(<span style=color:#e6db74>&#34;$ million\n&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>xlab</span>(<span style=color:#e6db74>&#34;\nMonth&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>ggtitle</span>(<span style=color:#e6db74>&#34;Seasonal plot: antidiabetic drug sales\n&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>theme_minimal</span>() <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>theme</span>(plot.title <span style=color:#f92672>=</span> <span style=color:#a6e22e>element_text</span>(hjust<span style=color:#f92672>=</span><span style=color:#ae81ff>0.5</span>))
+</code></pre></div><p><img loading=lazy src=/posts/images/ts_seasonal_plot_polar.png alt="Time plot 5">
+</p>
+<h1 id=seasonal-subseries-plots>Seasonal subseries plots<a hidden class=anchor aria-hidden=true href=#seasonal-subseries-plots>#</a></h1>
+<p>Another visualization idea that can be useful for seasonal patterns analysis is to plot the data for each season in separate mini time plots.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-r data-lang=r><span style=color:#a6e22e>ggsubseriesplot</span>(a10) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>ylab</span>(<span style=color:#e6db74>&#34;$ million\n&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>xlab</span>(<span style=color:#e6db74>&#34;\nMonth&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>ggtitle</span>(<span style=color:#e6db74>&#34;Seasonal subseries plot: antidiabetic drug sales\n&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>theme_minimal</span>() <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>theme</span>(plot.title <span style=color:#f92672>=</span> <span style=color:#a6e22e>element_text</span>(hjust<span style=color:#f92672>=</span><span style=color:#ae81ff>0.5</span>))
+</code></pre></div><p><img loading=lazy src=/posts/images/ts_seasonal_subseries_plot.png alt="Time plot 6">
+</p>
+<p>The horizontal lines present the means for each month. This form of plot shows the changes of seasonality over time. It can be especially useful in identifying changes within particular seasons.</p>
+<h1 id=scatterplots>Scatterplots<a hidden class=anchor aria-hidden=true href=#scatterplots>#</a></h1>
+<p>We know how to visualize individual time series. It&rsquo;s also useful to explore relationships <em>between</em> time series.</p>
+<p>the next figure shows two time series: half-hourly electricity demand (in gigawatts) and temperature (in degrees Celsius) for 2014 in Victoria, Australia. the temperatures are for Melbourne, the largest
+city in Victoria, while demand values are for the entire state.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-r data-lang=r>date_transform <span style=color:#f92672>&lt;-</span> <span style=color:#a6e22e>function</span>(x) {<span style=color:#a6e22e>format</span>(<span style=color:#a6e22e>date_decimal</span>(x), <span style=color:#e6db74>&#34;%b %Y&#34;</span>)}
+
+<span style=color:#a6e22e>autoplot</span>(elecdemand[,<span style=color:#a6e22e>c</span>(<span style=color:#e6db74>&#34;Demand&#34;</span>,<span style=color:#e6db74>&#34;Temperature&#34;</span>)], facets<span style=color:#f92672>=</span><span style=color:#66d9ef>TRUE</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>xlab</span>(<span style=color:#e6db74>&#34;\nYear: 2014&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>scale_x_continuous</span>(labels<span style=color:#f92672>=</span>date_transform) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>ylab</span>(<span style=color:#e6db74>&#34;&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>ggtitle</span>(<span style=color:#e6db74>&#34;Half-hourly electricity demand: Victoria, Australia\n&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>theme_minimal</span>() <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>theme</span>(plot.title <span style=color:#f92672>=</span> <span style=color:#a6e22e>element_text</span>(hjust<span style=color:#f92672>=</span><span style=color:#ae81ff>0.5</span>))
+</code></pre></div><p><img loading=lazy src=/posts/images/ts_multiple_facet.png alt="Time plot 7">
+</p>
+<p>We can study the relationship between demand and temperature by plotting one series against the other.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-r data-lang=r><span style=color:#a6e22e>qplot</span>(Temperature,
+      Demand,
+      data<span style=color:#f92672>=</span><span style=color:#a6e22e>as.data.frame</span>(elecdemand)) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>ylab</span>(<span style=color:#e6db74>&#34;Demand (GW)\n&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>xlab</span>(<span style=color:#e6db74>&#34;\nTemperature (Celsius)&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>theme_minimal</span>()
+</code></pre></div><p><img loading=lazy src=/posts/images/ts_scatterplot.png alt="Time plot 8">
+</p>
+<p>Now it&rsquo;s clear that high demand occurs when temperatures are high due to effect of air-conditioning. But there&rsquo;s also a heating effect where demand increases for very low temperatures.</p>
+<h2 id=correlation>Correlation<a hidden class=anchor aria-hidden=true href=#correlation>#</a></h2>
+<p>It&rsquo;s hard to skip the correlation when talking about the scatterplots. Correlation coefficient measures the strength of the relationsip between two variables.
+The mathematical formula for a correlation between variables $x$ and $y$ is given by:</p>
+<p>$$
+r = \frac{\sum (x_{t} - \bar{x})(y_{t}-\bar{y})}{\sqrt{\sum(x_{t}-\bar{x})^2}\sqrt{\sum(y_{t}-\bar{y})^2}}.
+$$</p>
+<p>The value of $r$ is normalized - it always lies between -1 and 1 with negative values indicating a negative relationship and positive values indicating a positive relationship. The graphs below
+show examples of datasets with varying levels of correlation.</p>
+<p><img loading=lazy src=/posts/images/ts_correlation_examples.png alt="Time plot 9">
+</p>
+<p>Important remark - correlation coefficient only measures the strength of the <em>linear</em> relationship and can sometimes be misleading. Correlation between the electricity demand and temperature data
+presented earlier is 0.28 but the non-linear relationsjip is stronger than that.</p>
+<p>The plots below present various datasets and for each a correlation coefficient was calculated.</p>
+<p><img loading=lazy src=/posts/images/ts_correlation_caveats.png alt="Time plot 10">
+</p>
+<p>You can see that in some cases despite correlation coefficient equal to zero, the relationship is clear. That shows how important
+is to look at the graphs and not simply rely on correlation values.</p>
+<h2 id=scatterplot-matrices>Scatterplot matrices<a hidden class=anchor aria-hidden=true href=#scatterplot-matrices>#</a></h2>
+<p>When there are several potential predictor variables, it&rsquo;s useful to plot each variable against remaining ones. Let&rsquo;s have a look at five time series presenting quarterly visitor numbers for five regions of
+New South Wales, Australia.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-r data-lang=r><span style=color:#a6e22e>autoplot</span>(visnights[,<span style=color:#ae81ff>1</span><span style=color:#f92672>:</span><span style=color:#ae81ff>5</span>], facets<span style=color:#f92672>=</span><span style=color:#66d9ef>TRUE</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>ylab</span>(<span style=color:#e6db74>&#34;Number of visitor nights each quarter (millions)\n&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>xlab</span>(<span style=color:#e6db74>&#34;&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>theme_minimal</span>()
+</code></pre></div><p><img loading=lazy src=/posts/images/ts_five_series.png alt="Time plot 11">
+</p>
+<p>To see relationship between these five time series, we can plot each time series against remaining ones. These plots can be arranged in a scatterplot matrix.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-r data-lang=r>GGally<span style=color:#f92672>::</span><span style=color:#a6e22e>ggpairs</span>(<span style=color:#a6e22e>as.data.frame</span>(visnights[,<span style=color:#ae81ff>1</span><span style=color:#f92672>:</span><span style=color:#ae81ff>5</span>]),
+                lower<span style=color:#f92672>=</span><span style=color:#a6e22e>list</span>(continuous<span style=color:#f92672>=</span><span style=color:#a6e22e>wrap</span>(<span style=color:#e6db74>&#34;points&#34;</span>, size<span style=color:#f92672>=</span><span style=color:#ae81ff>0.8</span>))) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>theme_minimal</span>()
+</code></pre></div><p><img loading=lazy src=/posts/images/ts_scatterplot_matrix.png alt="Time plot 12">
+</p>
+<p>For each panel, the variable on the vertical axis is given by the variable name in that row and the variable on the horizontal axis is given by the variable name in that column. There are many options available
+to produce different plots within each panel. In the default version the correlation coefficients are shown in the upper right half of the plot, the scatterplots are shown in the lower left half and the
+density plots are shown on the diagonal.</p>
+<p>This visualization enables a quick view of the relationships between all pairs of variables. In our example, the second column of plots shows there is a strong positive relationship between visitors to the
+NSW North Coast and visitors to the NSW South Coast but no detectable relationship between visitors to the NSW North Coast and visitors to the NSW South Inland. We can see some outliers and unusually high quarter for the
+NSW Metropolitan region, corresponding to the 2000 Sydney Olympics. This is the most easily seen in the first two plots in the left column, the largest value for NSW Metro is separate from the main cloud of obsevations.</p>
+<h1 id=lag-plots>Lag plots<a hidden class=anchor aria-hidden=true href=#lag-plots>#</a></h1>
+<p>The next graph displays scatterplots of quarterly Australian beer production where the horizontal axis shows lagged values of the time series. Each graph shows $y_t$ plotted agains $y_{t-k}$ for different values of $k$.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-r data-lang=r>beer2 <span style=color:#f92672>&lt;-</span> <span style=color:#a6e22e>window</span>(ausbeer, start<span style=color:#f92672>=</span><span style=color:#ae81ff>1992</span>)
+
+<span style=color:#a6e22e>gglagplot</span>(beer2, do.lines<span style=color:#f92672>=</span><span style=color:#66d9ef>FALSE</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>theme_minimal</span>()
+</code></pre></div><p><img loading=lazy src=/posts/images/ts_lagplot.png alt="Time plot 13">
+</p>
+<p>Here the colours indicate the quarter of the variable on the vertical axis. The relationship is strongly positive at lags 4 and 8, reflecting the strong seasonality in data. The negative relationship seen for lags 2 and 6
+occurs because peaks (in Q4) are plotted against troughs (in Q2).</p>
+<p>the <code>window()</code> function used here is useful when extracting a portion of a time series. In this case, we have extracted the data from <code>ausbeer</code>, beginning in 1992.</p>
+<h1 id=autocorrelation>Autocorrelation<a hidden class=anchor aria-hidden=true href=#autocorrelation>#</a></h1>
+<p>Just as correlation measures the extent of a linear relationship between two variables, autocorrelation measures the linear relationship between lagged values of a time series.</p>
+<p>There are several autocorrelation coefficients, corresponding to each panel in the lag plot. For example $r_1$ measures the relationship between $y_t$ and $y_{t-1}$, $r_2$ measures the relationship between
+$y_t$ and $y_{t-2}$ and so on.</p>
+<p>The value of $r_k$ can be written as:</p>
+<p>$$
+r_{k} = \frac{\sum\limits_{t=k+1}^T (y_{t}-\bar{y})(y_{t-k}-\bar{y})}
+{\sum\limits_{t=1}^T (y_{t}-\bar{y})^2},
+$$</p>
+<p>where $T$ is the length of the time series.</p>
+<p>The first nine autocorrelation coefficients for the beer production data are given in the following table.</p>
+<table>
+<thead>
+<tr>
+<th>$r_1$</th>
+<th>$r_2$</th>
+<th>$r_3$</th>
+<th>$r_4$</th>
+<th>$r_5$</th>
+<th>$r_6$</th>
+<th>$r_7$</th>
+<th>$r_8$</th>
+<th>$r_9$</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>-0.102</td>
+<td>-0.657</td>
+<td>-0.060</td>
+<td>0.869</td>
+<td>-0.089</td>
+<td>-0.635</td>
+<td>-0.054</td>
+<td>0.832</td>
+<td>-0.108</td>
+</tr>
+</tbody>
+</table>
+<p>These numbers correspond to previous nine scatterplots. The autocorrelation coefficients are plotted to show the <code>autocorrelaction function</code> or <code>ACF</code>. The plot is known as a <code>correlogram</code>.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-r data-lang=r><span style=color:#a6e22e>ggAcf</span>(beer2) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>ylab</span>(<span style=color:#e6db74>&#34;ACF\n&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>xlab</span>(<span style=color:#e6db74>&#34;\nLag&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>ggtitle</span>(<span style=color:#e6db74>&#34;Series: beer2\n&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>theme_minimal</span>() <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>theme</span>(plot.title <span style=color:#f92672>=</span> <span style=color:#a6e22e>element_text</span>(hjust<span style=color:#f92672>=</span><span style=color:#ae81ff>0.5</span>))
+</code></pre></div><p><img loading=lazy src=/posts/images/ts_acf.png alt="Time plot 14">
+</p>
+<p>In this graph:</p>
+<ul>
+<li>
+<p>$r_4$ is higher than values for other lags. This is due to the presence of seasonal pattern in the data - peaks tend to be four quarters apart, same as troughs.</p>
+</li>
+<li>
+<p>$r_2$ is smaller than values fot other lags - troughs tend to be two quarters behind peaks.</p>
+</li>
+<li>
+<p>The dashed blue lines indicate whether the correlations are significantly different from zero.</p>
+</li>
+</ul>
+<h2 id=trend-and-seasonality-in-acf-plots>Trend and seasonality in ACF plots<a hidden class=anchor aria-hidden=true href=#trend-and-seasonality-in-acf-plots>#</a></h2>
+<p>Then data have a trend, the autocorrelations for small lags tend do be large and positive because observations nearby in time are also nearby in size. So the ACF of a time series with trend
+tend to have positive values that slowly decrease as the lags increase.</p>
+<p>When data are seasonal, the autocorrelations will be larger for the seasonal lags (at multiples of the seasonal frequency) than for other lags.</p>
+<p>When data are both trended and seasonal, you can see a combination of these effects. The monthly Australian electricity demand series plotted below shows both trend and seasonality. It&rsquo;s followed by its
+ACF.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-r data-lang=r>aelec <span style=color:#f92672>&lt;-</span> <span style=color:#a6e22e>window</span>(elec, start<span style=color:#f92672>=</span><span style=color:#ae81ff>1980</span>)
+
+<span style=color:#a6e22e>autoplot</span>(aelec) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>xlab</span>(<span style=color:#e6db74>&#34;\nYear&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>ylab</span>(<span style=color:#e6db74>&#34;GWh\n&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>ggtitle</span>(<span style=color:#e6db74>&#34;Monthly Australian electricity demand 1980-1995\n&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>theme_minimal</span>() <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>theme</span>(plot.title <span style=color:#f92672>=</span> <span style=color:#a6e22e>element_text</span>(hjust<span style=color:#f92672>=</span><span style=color:#ae81ff>0.5</span>))
+</code></pre></div><p><img loading=lazy src=/posts/images/ts_trend_seasonality.png alt="Time plot 15">
+</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-r data-lang=r><span style=color:#a6e22e>ggAcf</span>(aelec, lag<span style=color:#f92672>=</span><span style=color:#ae81ff>48</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>ylab</span>(<span style=color:#e6db74>&#34;ACF\n&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>xlab</span>(<span style=color:#e6db74>&#34;\nLag&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>ggtitle</span>(<span style=color:#e6db74>&#34;ACF of monthly Australian electricity demand\n&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>theme_minimal</span>() <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>theme</span>(plot.title <span style=color:#f92672>=</span> <span style=color:#a6e22e>element_text</span>(hjust<span style=color:#f92672>=</span><span style=color:#ae81ff>0.5</span>))
+</code></pre></div><p><img loading=lazy src=/posts/images/ts_acf_aelec.png alt="Time plot 16">
+</p>
+<p>The slow decrease in the ACF as the lags increase is due to the trend while the <em>bumps</em> are due to the seasonality.</p>
+<h1 id=white-noise>White noise<a hidden class=anchor aria-hidden=true href=#white-noise>#</a></h1>
+<p>Time series that show no autocorrelation are called <code>whie noise</code>. The figure below presents an example of a white noise series.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-r data-lang=r><span style=color:#a6e22e>set.seed</span>(<span style=color:#ae81ff>42</span>)
+y <span style=color:#f92672>&lt;-</span> <span style=color:#a6e22e>ts</span>(<span style=color:#a6e22e>rnorm</span>(<span style=color:#ae81ff>50</span>))
+
+<span style=color:#a6e22e>autoplot</span>(y) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>ylab</span>(<span style=color:#e6db74>&#34;y\n&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>xlab</span>(<span style=color:#e6db74>&#34;\nTime&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>ggtitle</span>(<span style=color:#e6db74>&#34;A white noise time series\n&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>theme_minimal</span>() <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>theme</span>(plot.title <span style=color:#f92672>=</span> <span style=color:#a6e22e>element_text</span>(hjust<span style=color:#f92672>=</span><span style=color:#ae81ff>0.5</span>))
+</code></pre></div><p><img loading=lazy src=/posts/images/ts_white_noise.png alt="Time plot 17">
+</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-r data-lang=r><span style=color:#a6e22e>ggAcf</span>(y) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>ylab</span>(<span style=color:#e6db74>&#34;ACF\n&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>xlab</span>(<span style=color:#e6db74>&#34;\nLag&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>ggtitle</span>(<span style=color:#e6db74>&#34;ACF for the white noise series\n&#34;</span>) <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>theme_minimal</span>() <span style=color:#f92672>+</span>
+  <span style=color:#a6e22e>theme</span>(plot.title <span style=color:#f92672>=</span> <span style=color:#a6e22e>element_text</span>(hjust<span style=color:#f92672>=</span><span style=color:#ae81ff>0.5</span>))
+</code></pre></div><p><img loading=lazy src=/posts/images/ts_white_noise_acf.png alt="Time plot 18">
+</p>
+<p>For the white noise we expect each autocorrelation to be close to zero (not equal, as there is some random variation). We expect 95% of the spikes in the ACF to lie within $\pm 2/\sqrt{T}$ where $T$ is the length of the
+time series. It&rsquo;s common to plot these bounds on a graph of the ACF (blue dashed lines). If one or more large spikes are outside these bounds or if substantially more than 5% of spikes are outside, then the series is
+probably not the white noise.</p>
+</div>
+<footer class=post-footer>
+<nav class=paginav>
+<a class=prev href=/posts/marketing-mix-modeling/>
+<span class=title>« Prev Page</span>
+<br>
+<span>Marketing Mix Modeling</span>
+</a>
+<a class=next href=/posts/introduction-to-time-series-forecasting/>
+<span class=title>Next Page »</span>
+<br>
+<span>Introduction to Time Series Forecasting</span>
+</a>
+</nav>
+<div class=share-buttons>
+<a target=_blank rel="noopener noreferrer" aria-label="share Time Series Visualization on twitter" href="https://twitter.com/intent/tweet/?text=Time%20Series%20Visualization&url=%2fposts%2ftime-series-visualization%2f&hashtags="><svg viewBox="0 0 512 512"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM195.519 424.544c135.939.0 210.268-112.643 210.268-210.268.0-3.218.0-6.437-.153-9.502 14.406-10.421 26.973-23.448 36.935-38.314-13.18 5.824-27.433 9.809-42.452 11.648 15.326-9.196 26.973-23.602 32.49-40.92-14.252 8.429-30.038 14.56-46.896 17.931-13.487-14.406-32.644-23.295-53.946-23.295-40.767.0-73.87 33.104-73.87 73.87.0 5.824.613 11.494 1.992 16.858-61.456-3.065-115.862-32.49-152.337-77.241-6.284 10.881-9.962 23.601-9.962 37.088.0 25.594 13.027 48.276 32.95 61.456-12.107-.307-23.448-3.678-33.41-9.196v.92c0 35.862 25.441 65.594 59.311 72.49-6.13 1.686-12.72 2.606-19.464 2.606-4.751.0-9.348-.46-13.946-1.38 9.349 29.426 36.628 50.728 68.965 51.341-25.287 19.771-57.164 31.571-91.8 31.571-5.977.0-11.801-.306-17.625-1.073 32.337 21.15 71.264 33.41 112.95 33.41z"/></svg>
+</a>
+<a target=_blank rel="noopener noreferrer" aria-label="share Time Series Visualization on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&url=%2fposts%2ftime-series-visualization%2f&title=Time%20Series%20Visualization&summary=Time%20Series%20Visualization&source=%2fposts%2ftime-series-visualization%2f"><svg viewBox="0 0 512 512"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg>
+</a>
+<a target=_blank rel="noopener noreferrer" aria-label="share Time Series Visualization on reddit" href="https://reddit.com/submit?url=%2fposts%2ftime-series-visualization%2f&title=Time%20Series%20Visualization"><svg viewBox="0 0 512 512"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg>
+</a>
+<a target=_blank rel="noopener noreferrer" aria-label="share Time Series Visualization on facebook" href="https://facebook.com/sharer/sharer.php?u=%2fposts%2ftime-series-visualization%2f"><svg viewBox="0 0 512 512"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg>
+</a>
+<a target=_blank rel="noopener noreferrer" aria-label="share Time Series Visualization on whatsapp" href="https://api.whatsapp.com/send?text=Time%20Series%20Visualization%20-%20%2fposts%2ftime-series-visualization%2f"><svg viewBox="0 0 512 512"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg>
+</a>
+<a target=_blank rel="noopener noreferrer" aria-label="share Time Series Visualization on telegram" href="https://telegram.me/share/url?text=Time%20Series%20Visualization&url=%2fposts%2ftime-series-visualization%2f"><svg viewBox="2 2 28 28"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg>
+</a>
+</div>
+</footer>
+</article>
+</main>
+<footer class=footer>
+<span>&copy; 2021 <a href>Marcin Halupka</a></span>
+<span>
+Powered by
+<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
+        <a href=https://git.io/hugopapermod rel=noopener target=_blank>PaperMod</a>
+</span>
+</footer>
+<a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
+</a>
+<script>let menu=document.getElementById('menu');menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)},document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener("click",function(b){b.preventDefault();var a=this.getAttribute("href").substr(1);window.matchMedia('(prefers-reduced-motion: reduce)').matches?document.querySelector(`[id='${decodeURIComponent(a)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(a)}']`).scrollIntoView({behavior:"smooth"}),a==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${a}`)})})</script>
+<script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script>
+<script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove('dark'),localStorage.setItem("pref-theme",'light')):(document.body.classList.add('dark'),localStorage.setItem("pref-theme",'dark'))})</script>
+<script>MathJax={tex:{inlineMath:[["$","$"],["\\(","\\)"]],displayMath:[["$$","$$"],["\\[","\\]"]],processEscapes:!0,processEnvironments:!0},options:{skipHtmlTags:["script","noscript","style","textarea","pre"]}},window.addEventListener("load",a=>{document.querySelectorAll("mjx-container").forEach(function(a){a.parentElement.classList+="has-jax"})})</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type=text/javascript id=MathJax-script async src=https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js></script>
+</body>
+</html>

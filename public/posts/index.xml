@@ -9,15 +9,44 @@
       <link>%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</link>
     </image>
     <generator>Hugo -- gohugo.io</generator>
-    <lastBuildDate>Tue, 26 Oct 2021 23:35:17 +0200</lastBuildDate><atom:link href="/posts/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Tue, 02 Nov 2021 12:05:26 +0100</lastBuildDate><atom:link href="/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Introduction to Time Series</title>
-      <link>/posts/introduction-to-time-series/</link>
+      <title>Marketing Mix Modeling</title>
+      <link>/posts/marketing-mix-modeling/</link>
+      <pubDate>Tue, 02 Nov 2021 12:05:26 +0100</pubDate>
+      
+      <guid>/posts/marketing-mix-modeling/</guid>
+      <description>Marketing Mix Model or Media Mix Model (MMM) is used by advertisers to measure how their media spending contributes to sales. As a result, the future budget can be allocated in a more efficient way. ROAS - return on ad spend and mROAS - marginal return on ad spend are the key metrics to look at. High ROAS indicates the channel is efficient, high mROAS means that increasing spend in the channel will yield a high return based on current spending level.</description>
+    </item>
+    
+    <item>
+      <title>Time Series Visualization</title>
+      <link>/posts/time-series-visualization/</link>
+      <pubDate>Tue, 26 Oct 2021 23:36:17 +0200</pubDate>
+      
+      <guid>/posts/time-series-visualization/</guid>
+      <description>The first thing to do in any data analysis is to plot the data. Graphs enable many features of the data to be visualized, including patterns, unusual observations, changes over time and relationships between the data. Just as the type of data determines what forecasting methods to use, it also determines what graphs are appropriate.
+Ts objects A time series can be thought as a list of numbers, along with some information about what times those numbers were recorded.</description>
+    </item>
+    
+    <item>
+      <title>Introduction to Time Series Forecasting</title>
+      <link>/posts/introduction-to-time-series-forecasting/</link>
       <pubDate>Tue, 26 Oct 2021 23:35:17 +0200</pubDate>
       
-      <guid>/posts/introduction-to-time-series/</guid>
+      <guid>/posts/introduction-to-time-series-forecasting/</guid>
       <description>Good forecasts can seem almost magical, while bad forecasts may be dangerous. We can look at three famous predictions about computing:
  I think there is a world market for maybe five computers. (Chairman of IBM, 1943) Computers in the future may weigh no more than 1.5 tons. (Popular Mechanics, 1949) There is no reason anyone would want a computer in their home. (President, DEC, 1977)  The last of these was made three years before IBM produced the first personal computer.</description>
+    </item>
+    
+    <item>
+      <title>Forward and Backward Algorithm in Hidden Markov Model</title>
+      <link>/posts/forward-and-backward-algorithm-in-hidden-markov-model/</link>
+      <pubDate>Tue, 26 Oct 2021 00:09:35 +0200</pubDate>
+      
+      <guid>/posts/forward-and-backward-algorithm-in-hidden-markov-model/</guid>
+      <description>Introduction to Hidden Markov Model provided basic understanding of the topic. We also presented three main problems of HMM (Evaluation, Learning and Decoding). In this post we&amp;rsquo;ll deep dive into the Evaluation Problem. Starting from mathematical understanding, finishing on Python and R implementations.
+Quick recap Hidden Markov Model is a Markov Chain which is mainly used in problems with temporal sequence of the data. Markov Model explaimns that the next step depends only on the previous step in a temporal sequence.</description>
     </item>
     
     <item>

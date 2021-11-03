@@ -41,7 +41,7 @@ $$\begin{eqnarray}
 
 The diagram for this simple Markov Model:
 
-![Markov Model Diagram](/posts/images/1_1.png)
+![Markov Model Diagram](/posts/images/introduction-to-hidden-markov-model/1_transitions.png)
 
 ## Transition probabilities
 
@@ -53,9 +53,9 @@ $$
 a_{ij} = P(s(t+1) = j | s(t) = i)
 $$
 
-![Markov Model Transition Probabilities](/posts/images/1_2.png)
+![Markov Model Transition Probabilities](/posts/images/introduction-to-hidden-markov-model/3_transitions_diagram.png)
 
-For an example presented above, the transition probability fromk Sun to Cloud is defined as $a_{12}$. Note that the transition might happen to the same state also. If we have sun in two consecutive days
+For an example presented above, the transition probability from Sun to Cloud is defined as $a_{12}$. Note that the transition might happen to the same state also. If we have sun in two consecutive days
 then the transition probability from sun to sun at the next time step will be $a_{11}$.
 
 Generally, the transition probabilities are defined using a `(M x M)` matrix, known as **Transition Probability Matrix**. For our example, the Transition Probability Matrix would be defined as:
@@ -105,7 +105,7 @@ emit an observable symbol `v(t)`.
 
 The idea is presented on a graph below:
 
-![Markov Model Transition Probabilities](/posts/images/1_3.png)
+![Markov Model Transition Probabilities](/posts/images/introduction-to-hidden-markov-model/2_transitions_hmm.png)
 
 In our initial example of dishonest casino, the die rolled (fair or unfair) is hidden. However every time the die is rolled, we know the outcome
 (number between 1 and 6) - this is the symbol we observe.
@@ -125,7 +125,7 @@ the weather, knowing the mood of the person.
 
 The graphical presentation of transition mechanism looks like that:
 
-![Markov Model Transition Probabilities](/posts/images/1_4.png)
+![Markov Model Transition Probabilities](/posts/images/introduction-to-hidden-markov-model/4_transitions_diagram_hmm.png)
 
 The observable symbols are $\{ v_1 , v_2 \}$ - from each hidden state one of them must be emitted.
 The probability of emitting a symbol is known as `emission probability` - defined by us as $b_{jk}$. Mathematically,

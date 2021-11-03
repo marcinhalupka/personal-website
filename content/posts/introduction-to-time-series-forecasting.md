@@ -1,5 +1,5 @@
 ---
-title: "Introduction to Time Series"
+title: "Introduction to Time Series Forecasting"
 date: 2021-10-26T23:35:17+02:00
 draft: false
 ---
