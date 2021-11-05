@@ -36,7 +36,7 @@
 <meta name=twitter:title content="Marketing Mix Modeling">
 <meta name=twitter:description content="Marketing Mix Model or Media Mix Model (MMM) is used by advertisers to measure how their media spending contributes to sales. As a result, the future budget can be allocated in a more efficient way. ROAS - return on ad spend and mROAS - marginal return on ad spend are the key metrics to look at. High ROAS indicates the channel is efficient, high mROAS means that increasing spend in the channel will yield a high return based on current spending level.">
 <script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":2,"name":"Posts","item":"/posts/"},{"@type":"ListItem","position":3,"name":"Marketing Mix Modeling","item":"/posts/marketing-mix-modeling/"}]}</script>
-<script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Marketing Mix Modeling","name":"Marketing Mix Modeling","description":"Marketing Mix Model or Media Mix Model (MMM) is used by advertisers to measure how their media spending contributes to sales. As a result, the future budget can be allocated in a more efficient way. ROAS - return on ad spend and mROAS - marginal return on ad spend are the key metrics to look at. High ROAS indicates the channel is efficient, high mROAS means that increasing spend in the channel will yield a high return based on current spending level.","keywords":[],"articleBody":"Marketing Mix Model or Media Mix Model (MMM) is used by advertisers to measure how their media spending contributes to sales. As a result, the future budget can be allocated in a more efficient way. ROAS - return on ad spend and mROAS - marginal return on ad spend are the key metrics to look at. High ROAS indicates the channel is efficient, high mROAS means that increasing spend in the channel will yield a high return based on current spending level.\nModel training procedure   Fit a regression model with priors on coefficients using media channels' impressions (or spendings) and control variables to predict (explain) sales.\n  Decompose sales to each media channel’s contribution. Channel contribution is calculated by comparing original sales and predicted sales upon removal of the channel.\n  Compute ROAS and mROAS using channel’s contribution and spendings.\n  Intuition of MMM   Offline channel’s influence is hard to track (example: a customer saw a TV ad and made a purchase at store)\n  Media channels' influences are interwined\n  Actual Customer Journey: multiple touchpoints\nA customer:\n Saw a product on TV Clicked on a display ad Clicked on a paid search ad Made a purchase of $30  In this case 3 touchpoints contributed to the conversion and they should all get credits for the conversion.\nWhat’s trackable: last digital touchpoint\nUsually, only the last digital touchpoint can be tracked. In this case SEM will get all credits form this conversion.\nSo a good attribution model should take into account all the relevant variables leading to conversion.\nMultiplicative MMM Since media channels work interactively, a multiplicative model structure is adopted:\n$$ y = \\beta_0 \\cdot x_{TV}^{\\beta_{TV}} \\cdot x_{SEM}^{\\beta_{SEM}} \\cdot \\dots \\cdot x_{ctrl}^{\\beta_{ctrl}} $$\nWhere $y$ - sales, $x_i$ - input media variables and $\\beta_i$ - parameters.\nTaking log of both sides we get the linear form (log-log model).\n$$ \\log y = \\beta_0 + \\beta_{TV} \\log {x_{TV}} + \\beta_{SEM} \\log {x_{SEM}} + \\dots + \\beta_{ctrl} \\log {x_{ctrl}} $$\nTypical constraints on coefficients:\n Media coefficients are non-negative If some control variables like discounts, macroeconomy, holidays are expected to have positive impact on sales, their coefficients also should be limited to positive or non-negative values.  Adstock function Media effect on sales may lag behind the original exposure and extend several weeks. The carry-over effect is modeled by an adstock function given by the following mathematical formula:\n$$\\begin{eqnarray} w_{t-l} \u0026=\u0026 D^{{(l - P)}^2}, \\; \\text{for each} \\; l \\;\\text{in} \\; [0, L) \\\\\\\nx_t^* \u0026=\u0026 \\text{Adstock}(x_t, \\dots, x_{t-(L-1)}; L, P, D) = \\frac{\\sum_{l=0}^{L-1} w_{t-l} \\cdot x_{t-l}}{\\sum_{l=0}^{L-1} w_{t-l}} \\end{eqnarray}$$\n L - length of the media effect P - peak/delay of the media effect - how many units of time it’s lagging behind first exposure D - dekay/retention rate of the media channel - concentration of the effect  The media effect of current weeks is a weighted average of current week and previous (L-1) weeks.\nAdstock example\nTask: compute $x_3^*$ for $L = 4$, $P = 1$ and $D = 0.8$\nWe need to obtain values for $w_i$:\n            $l$ $0$ $1$ $2$ $3$   $x$ $x_3$ $x_2$ $x_1$ $x_0$   $w$ $0.8^1$ $0.8^0$ $0.8^1$ $0.8^4$    Then we receive:\n$$ x_3^* = \\frac{0.8 \\cdot x_3 + 1 \\cdot x_2 + 0.8 \\cdot x_1 + 0.8^4 \\cdot x_0}{0.8 + 1 + 0.8 + 0.8^4} $$\nAdstock with varying decay\nThe larger the decay, the more scattered the effect.\nAdstock with varying length\nAs our model assumes geometrical decay when we’re moving from the peak, the impact of length can be relatively minor in most cases. During training the length could be fixed to a period long enought for the media effect to finish - for example 8 weeks.\nExample code in python:\nimport numpy as np import pandas as pd def apply_adstock(x, L, P, D): ''' params: x: original media variable, array L: length P: peak, delay in effect D: decay, retain rate returns: array, adstocked media variable ''' x = np.append(np.zeros(L-1), x) weights = np.zeros(L) for l in range(L): weight = D**((l-P)**2) weights[L-1-l] = weight adstocked_x = [] for i in range(L-1, len(x)): x_array = x[i-L+1:i+1] xi = sum(x_array * weights)/sum(weights) adstocked_x.append(xi) adstocked_x = np.array(adstocked_x) return adstocked_x Diminishing return After a certain saturation point, increasing spend will yield diminishing marginal return - the channel will be losing efficiency as you keep overspending on it.\nThe diminishing return is modeled by Hill function:\n$$ \\text{Hill} (x; K, S) = \\frac{1}{1 + {(x/K)}^{-S}} $$\nK - half saturation point\nS - slope\nHill function with varying K and S\nExample code in python:\ndef hill_transform(x, ec, slope): return 1 / (1 + (x / ec)**(-slope)) Model specification and implementation We’ll use a sample dataset to go through all the steps of training a model.\nExample dataset Four years (209 weeks) covered - sales, media impressions and media spendings at weekly level\n Media variables:  Media impressions (prefix = mdip_): impressions of 13 media channels: direct mail, insert, newspaper, digital audio, radio, TV, digital video, social media, online display, email, SMS, affiliates, SEM. Media spending (prefix = mdsp_): spendings of media channels.   Control variables:  Macroeconomy (prefix = me_): CPI, gas price. Markdown (prefix = mrkdn_): markdown/discount. Store count (st_ct) Retail Holidays (prefix = hldy_): one-hot encoded Seasonality (prefix = seas_): month, with Nov and Dec further broken into weeks. One-hot encoded.   Sales variables (sales)  df = pd.read_csv('data.csv') # 1. media variables # media impression mdip_cols=[col for col in df.columns if 'mdip_' in col] # media spending mdsp_cols=[col for col in df.columns if 'mdsp_' in col] # 2. control variables # macro economics variables me_cols = [col for col in df.columns if 'me_' in col] # store count variables st_cols = ['st_ct'] # markdown/discount variables mrkdn_cols = [col for col in df.columns if 'mrkdn_' in col] # holiday variables hldy_cols = [col for col in df.columns if 'hldy_' in col] # seasonality variables seas_cols = [col for col in df.columns if 'seas_' in col] base_vars = me_cols+st_cols+mrkdn_cols+va_cols+hldy_cols+seas_cols # 3. sales variables sales_cols =['sales'] Model architecture The model is built in a stacked way. Three models are trained:\n Control Model Marketing Mix Model Diminishing Return Model  Control model The goal\nResults and marketing budget optimization ","wordCount":"1017","inLanguage":"en","datePublished":"2021-11-02T12:05:26+01:00","dateModified":"2021-11-02T12:05:26+01:00","author":{"@type":"Person","name":"Marcin Halupka"},"mainEntityOfPage":{"@type":"WebPage","@id":"/posts/marketing-mix-modeling/"},"publisher":{"@type":"Organization","name":"Marcin Halupka","logo":{"@type":"ImageObject","url":"%3Clink%20/%20abs%20url%3E"}}}</script>
+<script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Marketing Mix Modeling","name":"Marketing Mix Modeling","description":"Marketing Mix Model or Media Mix Model (MMM) is used by advertisers to measure how their media spending contributes to sales. As a result, the future budget can be allocated in a more efficient way. ROAS - return on ad spend and mROAS - marginal return on ad spend are the key metrics to look at. High ROAS indicates the channel is efficient, high mROAS means that increasing spend in the channel will yield a high return based on current spending level.","keywords":[],"articleBody":"Marketing Mix Model or Media Mix Model (MMM) is used by advertisers to measure how their media spending contributes to sales. As a result, the future budget can be allocated in a more efficient way. ROAS - return on ad spend and mROAS - marginal return on ad spend are the key metrics to look at. High ROAS indicates the channel is efficient, high mROAS means that increasing spend in the channel will yield a high return based on current spending level.\nModel training procedure   Fit a regression model with priors on coefficients using media channels' impressions (or spendings) and control variables to predict (explain) sales.\n  Decompose sales to each media channel’s contribution. Channel contribution is calculated by comparing original sales and predicted sales upon removal of the channel.\n  Compute ROAS and mROAS using channel’s contribution and spendings.\n  Intuition of MMM   Offline channel’s influence is hard to track (example: a customer saw a TV ad and made a purchase at store)\n  Media channels' influences are interwined\n  Actual Customer Journey: multiple touchpoints\nA customer:\n Saw a product on TV Clicked on a display ad Clicked on a paid search ad Made a purchase of $30  In this case 3 touchpoints contributed to the conversion and they should all get credits for the conversion.\nWhat’s trackable: last digital touchpoint\nUsually, only the last digital touchpoint can be tracked. In this case SEM will get all credits form this conversion.\nSo a good attribution model should take into account all the relevant variables leading to conversion.\nMultiplicative MMM Since media channels work interactively, a multiplicative model structure is adopted:\n$$ y = \\beta_0 \\cdot x_{TV}^{\\beta_{TV}} \\cdot x_{SEM}^{\\beta_{SEM}} \\cdot \\dots \\cdot x_{ctrl}^{\\beta_{ctrl}} $$\nWhere $y$ - sales, $x_i$ - input media variables and $\\beta_i$ - parameters.\nTaking log of both sides we get the linear form (log-log model).\n$$ \\log y = \\beta_0 + \\beta_{TV} \\log {x_{TV}} + \\beta_{SEM} \\log {x_{SEM}} + \\dots + \\beta_{ctrl} \\log {x_{ctrl}} $$\nTypical constraints on coefficients:\n Media coefficients are non-negative If some control variables like discounts, macroeconomy, holidays are expected to have positive impact on sales, their coefficients also should be limited to positive or non-negative values.  Adstock function Media effect on sales may lag behind the original exposure and extend several weeks. The carry-over effect is modeled by an adstock function given by the following mathematical formula:\n$$\\begin{eqnarray} w_{t-l} \u0026=\u0026 D^{{(l - P)}^2}, \\; \\text{for each} \\; l \\;\\text{in} \\; [0, L) \\\\\\\nx_t^* \u0026=\u0026 \\text{Adstock}(x_t, \\dots, x_{t-(L-1)}; L, P, D) = \\frac{\\sum_{l=0}^{L-1} w_{t-l} \\cdot x_{t-l}}{\\sum_{l=0}^{L-1} w_{t-l}} \\end{eqnarray}$$\n L - length of the media effect P - peak/delay of the media effect - how many units of time it’s lagging behind first exposure D - dekay/retention rate of the media channel - concentration of the effect  The media effect of current weeks is a weighted average of current week and previous (L-1) weeks.\nAdstock example\nTask: compute $x_3^*$ for $L = 4$, $P = 1$ and $D = 0.8$\nWe need to obtain values for $w_i$:\n            $l$ $0$ $1$ $2$ $3$   $x$ $x_3$ $x_2$ $x_1$ $x_0$   $w$ $0.8^1$ $0.8^0$ $0.8^1$ $0.8^4$    Then we receive:\n$$ x_3^* = \\frac{0.8 \\cdot x_3 + 1 \\cdot x_2 + 0.8 \\cdot x_1 + 0.8^4 \\cdot x_0}{0.8 + 1 + 0.8 + 0.8^4} $$\nAdstock with varying decay\nThe larger the decay, the more scattered the effect.\nAdstock with varying length\nAs our model assumes geometrical decay when we’re moving from the peak, the impact of length can be relatively minor in most cases. During training the length could be fixed to a period long enought for the media effect to finish - for example 8 weeks.\nExample code in python:\nimport numpy as np import pandas as pd def apply_adstock(x, L, P, D): ''' params: x: original media variable, array L: length P: peak, delay in effect D: decay, retain rate returns: array, adstocked media variable ''' x = np.append(np.zeros(L-1), x) weights = np.zeros(L) for l in range(L): weight = D**((l-P)**2) weights[L-1-l] = weight adstocked_x = [] for i in range(L-1, len(x)): x_array = x[i-L+1:i+1] xi = sum(x_array * weights)/sum(weights) adstocked_x.append(xi) adstocked_x = np.array(adstocked_x) return adstocked_x Diminishing return After a certain saturation point, increasing spend will yield diminishing marginal return - the channel will be losing efficiency as you keep overspending on it.\nThe diminishing return is modeled by Hill function:\n$$ \\text{Hill} (x; K, S) = \\frac{1}{1 + {(x/K)}^{-S}} $$\nK - half saturation point\nS - slope\nHill function with varying K and S\nExample code in python:\ndef hill_transform(x, ec, slope): return 1 / (1 + (x / ec)**(-slope)) Model specification and implementation We’ll use a sample dataset to go through all the steps of training a model.\nExample dataset Four years (209 weeks) covered - sales, media impressions and media spendings at weekly level\n Media variables:  Media impressions (prefix = mdip_): impressions of 13 media channels: direct mail, insert, newspaper, digital audio, radio, TV, digital video, social media, online display, email, SMS, affiliates, SEM. Media spending (prefix = mdsp_): spendings of media channels.   Control variables:  Macroeconomy (prefix = me_): CPI, gas price. Markdown (prefix = mrkdn_): markdown/discount. Store count (st_ct) Retail Holidays (prefix = hldy_): one-hot encoded Seasonality (prefix = seas_): month, with Nov and Dec further broken into weeks. One-hot encoded.   Sales variables (sales)  df = pd.read_csv('data.csv') # 1. media variables # media impression mdip_cols=[col for col in df.columns if 'mdip_' in col] # media spending mdsp_cols=[col for col in df.columns if 'mdsp_' in col] # 2. control variables # macro economics variables me_cols = [col for col in df.columns if 'me_' in col] # store count variables st_cols = ['st_ct'] # markdown/discount variables mrkdn_cols = [col for col in df.columns if 'mrkdn_' in col] # holiday variables hldy_cols = [col for col in df.columns if 'hldy_' in col] # seasonality variables seas_cols = [col for col in df.columns if 'seas_' in col] base_vars = me_cols+st_cols+mrkdn_cols+va_cols+hldy_cols+seas_cols # 3. sales variables sales_cols =['sales'] Model architecture The model is built in a stacked way. Three models are trained:\n Control Model Marketing Mix Model Diminishing Return Model  Control model The goal is to predict base sales (X_ctrl) as an input variable to MMM - this represents the baseline sales trend without any marketing activities.\nWe divide variables into two groups: $X_1$ and $X_2$.\n$X_1$ - control variables positively related to sales\n$X_2$ - control variables that may have either positive or negative impact on sales.\n$y$ - target variable, sales\nThe variables are centralized.\nPriors\n   Parameter Prior Description     $\\beta_1$ half normal (0, 5) Regression coefficients for control variables positively related to sales   $\\beta_2$ normal (0, 5) Regression coefficients for control variables positively or negatively related to sales   $\\alpha$ [0, min(y)] Intercept   Residual inverse gamma (0.05, 0.05*0.01) Residual variance    Python code\nimport pystan import os os.environ['CC'] = 'gcc-10' os.environ['CXX'] = 'g++-10' # mean-centralize: sales, numeric base_vars df_ctrl, sc_ctrl = mean_center_trandform(df, ['sales']+me_cols+st_cols+mrkdn_cols) df_ctrl = pd.concat([df_ctrl, df[hldy_cols+seas_cols]], axis=1) # variables positively related to sales: macro economy, store count, markdown, holiday pos_vars = [col for col in base_vars if col not in seas_cols] X1 = df_ctrl[pos_vars].values # variables may have either positive or negtive impact on sales: seasonality pn_vars = seas_cols X2 = df_ctrl[pn_vars].values ctrl_data = { 'N': len(df_ctrl), 'K1': len(pos_vars), 'K2': len(pn_vars), 'X1': X1, 'X2': X2, 'y': df_ctrl['sales'].values, 'max_intercept': min(df_ctrl['sales']) } ctrl_code1 = ''' data { int N; // number of observations int K1; // number of positive predictors int K2; // number of positive/negative predictors real max_intercept; // restrict the intercept to be less than the minimum y matrix[N, K1] X1; matrix[N, K2] X2; vector[N] y; } parameters { vector[K1] beta1; // regression coefficients for X1 (positive) vector[K2] beta2; // regression coefficients for X2 realalpha; // intercept real noise_var; // residual variance } model { // Define the priors beta1 ~ normal(0, 1); beta2 ~ normal(0, 1); noise_var ~ inv_gamma(0.05, 0.05 * 0.01); // The likelihood y ~ normal(X1*beta1 + X2*beta2 + alpha, sqrt(noise_var)); } ''' sm1 = pystan.StanModel(model_code=ctrl_code1, verbose=True) fit1 = sm1.sampling(data=ctrl_data, iter=2000, chains=4) fit1_result = fit1.extract() Marketing Mix Model Our goal is to:\n Find appropriate adstock parameters for media channels Decompose sales to media channels' contribution and baseline (non-marketing) contribution  L - length of media impact\nP - peak of media impact\nD - decay of media impact\nX - adstocked media impression variables and base sales\ny - target variable, sales\nVariables are centralized.\nPriors\n   Parameter Prior Description     $L$ 8 Length of media impact   $P$ uniform(0, max_lag/2) Peak/delay of media impact   $D$ beta(3, 3) Decay rate of media channel   $\\beta$ half normal(0, 1) Regression coefficients for media channels and control   $\\tau$ normal(0, 5) Intercept   Residual inverse gamma(0.05, 0.05*0.01) Residual variance    Python code\ndf_mmm, sc_mmm = mean_log1p_trandform(df, ['sales', 'base_sales']) mu_mdip = df[mdip_cols].apply(np.mean, axis=0).values max_lag = 8 num_media = len(mdip_cols) # padding zero * (max_lag-1) rows X_media = np.concatenate((np.zeros((max_lag-1, num_media)), df[mdip_cols].values), axis=0) X_ctrl = df_mmm['base_sales'].values.reshape(len(df),1) model_data2 = { 'N': len(df), 'max_lag': max_lag, 'num_media': num_media, 'X_media': X_media, 'mu_mdip': mu_mdip, 'num_ctrl': X_ctrl.shape[1], 'X_ctrl': X_ctrl, 'y': df_mmm['sales'].values } model_code2 = ''' functions { // the adstock transformation with a vector of weights real Adstock(vector t, row_vector weights) { return dot_product(t, weights) / sum(weights); } } data { // the total number of observations int N; // the vector of sales real y[N]; // the maximum duration of lag effect, in weeks int max_lag; // the number of media channels int num_media; // matrix of media variables matrix[N+max_lag-1, num_media] X_media; // vector of media variables' mean real mu_mdip[num_media]; // the number of other control variables int num_ctrl; // a matrix of control variables matrix[N, num_ctrl] X_ctrl; } parameters { // residual variance real noise_var; // the intercept real tau; // the coefficients for media variables and base sales vector[num_media+num_ctrl] beta; // the decay and peak parameter for the adstock transformation of // each media vector[num_media] decay; vector[num_media] peak; } transformed parameters { // the cumulative media effect after adstock real cum_effect; // matrix of media variables after adstock matrix[N, num_media] X_media_adstocked; // matrix of all predictors matrix[N, num_media+num_ctrl] X; // adstock, mean-center, log1p transformation row_vector[max_lag] lag_weights; for (nn in 1:N) { for (media in 1 : num_media) { for (lag in 1 : max_lag) { lag_weights[max_lag-lag+1] } cum_effect X_media_adstocked[nn, media] } X } } model { decay ~ beta(3,3); peak ~ uniform(0, ceil(max_lag/2)); tau ~ normal(0, 5); for (i in 1 : num_media+num_ctrl) { beta[i] ~ normal(0, 1); } noise_var ~ inv_gamma(0.05, 0.05 * 0.01); y ~ normal(tau + X * beta, sqrt(noise_var)); } ''' sm2 = pystan.StanModel(model_code=model_code2, verbose=True) fit2 = sm2.sampling(data=model_data2, iter=1000, chains=3) fit2_result = fit2.extract() Distribution of Media Coefficients\nRed line - mean, green line - median.\nDecompose sales to media channels' contribution\nEach media channel’s contribution = total sales - sales upon removal of the channel. In the previous model fitting step, parameters of the log-log model have been found:\nNow we can plug them into the multiplicative mode:\nBaseline = $1000$\n$x_1 = 100, \\; \\beta_1 = 0.05, \\; x_1^{\\beta_1} = 1.26$\n$x_2 = 500, \\; \\beta_2 = 0.03, \\; x_2^{\\beta_2} = 1.20$\n$y = 1000 \\cdot 1.26 \\cdot 1.20 = 1512$\nContribution of media 1: $C_1 = 1512 - 1512/1.26 = 312$\nContribution of media 1: $C_1 = 1512 - 1512/1.20 = 252$\nSum of media contribution is slightly different from total:\n$V_{pred} = C_1 + C_2 = 564, \\; V_{true} = 512$\nSo we can scale each factor’s contribution by removing the delta volume proportionally:\n$C_1^\\prime = 312 - (564-512) \\cdot 312/564 = 283.23$\n$C_2^\\prime = 252 - (564-512) \\cdot 252/564 = 228.77$\nTotal colume: $V_{total}^\\prime = 1000 + 283.23 + 228.77 = 1512$\nPython code\n# decompose sales to media contribution mc_df = mmm_decompose_media_contrib(mmm, df, y_true=df['sales_ln']) adstock_params = mmm['adstock_params'] mc_pct, mc_pct2 = calc_media_contrib_pct(mc_df, period=52) Adstock parameters\n{'dm': {'L': 8, 'P': 0.8147057071636012, 'D': 0.5048365638721349}, 'inst': {'L': 8, 'P': 0.6339321363933637, 'D': 0.40532404247040194}, 'nsp': {'L': 8, 'P': 1.1076944292039324, 'D': 0.4612905130128658}, 'auddig': {'L': 8, 'P': 1.8834110997525702, 'D': 0.5117823761413419}, 'audtr': {'L': 8, 'P': 1.9892680621155827, 'D': 0.5046141055524362}, 'vidtr': {'L': 8, 'P': 0.05520253973872224, 'D': 0.0846136627657064}, 'viddig': {'L': 8, 'P': 1.862571613911107, 'D': 0.5074553132446618}, 'so': {'L': 8, 'P': 1.7027472358912694, 'D': 0.5046386226501091}, 'on': {'L': 8, 'P': 1.4169662215350334, 'D': 0.4907407637366824}, 'em': {'L': 8, 'P': 1.0590065753144235, 'D': 0.44420264450045377}, 'sms': {'L': 8, 'P': 1.8487648735160152, 'D': 0.5090970201714644}, 'aff': {'L': 8, 'P': 0.6018657109295106, 'D': 0.39889023002777724}, 'sem': {'L': 8, 'P': 1.34945185610011, 'D': 0.47875793676213835}} Diminishing return model The goal for each channel is to find the relationship (fit a Hill function) between spending and contribution so ROAS and mROAS can be calculated.\nx - adstocked media channel spending\nK - half saturation\nS - shape\ny - target variable, the media channel’s contribution\nVariables are centralized\nPriors\n   Parameter Prior Description     $K$ beta(2, 2) Half saturation point   $S$ gamma(3, 1) Shape   $\\beta$ half normal(0, 1) Coefficient   Residual inverse gamma(0.05, 0.05*0.01) Residual variance    Python code\ndef create_hill_model_data(df, mc_df, adstock_params, media): y = mc_df['mdip_'+media].values L, P, D = adstock_params[media]['L'], adstock_params[media]['P'], adstock_params[media]['D'] x = df['mdsp_'+media].values x_adstocked = apply_adstock(x, L, P, D) # centralize mu_x, mu_y = x_adstocked.mean(), y.mean() sc = {'x': mu_x, 'y': mu_y} x = x_adstocked/mu_x y = y/mu_y model_data = { 'N': len(y), 'y': y, 'X': x } return model_data, sc model_code3 = ''' functions { // the Hill function real Hill(real t, real ec, real slope) { return 1 / (1 + (t / ec)^(-slope)); } } data { // the total number of observations int N; // y: vector of media contribution vector[N] y; // X: vector of adstocked media spending vector[N] X; } parameters { // residual variance real noise_var; // regression coefficient real beta_hill; // ec50 and slope for Hill function of the media real ec; real slope; } transformed parameters { // a vector of the mean response vector[N] mu; for (i in 1:N) { mu[i] } } model { slope ~ gamma(3, 1); ec ~ beta(2, 2); beta_hill ~ normal(0, 1); noise_var ~ inv_gamma(0.05, 0.05 * 0.01); y ~ normal(mu, sqrt(noise_var)); } ''' # train hill models for all media channels sm3 = pystan.StanModel(model_code=model_code3, verbose=True) hill_models = {} to_train = ['dm', 'inst', 'nsp', 'auddig', 'audtr', 'vidtr', 'viddig', 'so', 'on', 'sem'] for media in to_train: print('training for media: ', media) hill_model = train_hill_model(df, mc_df, adstock_params, media, sm3) hill_models[media] = hill_model Diminishing Return Model (Fitted Hill Curve)\nCalculating overall ROAS and weekly ROAS Overall ROAS = total media contribution / total media spending\nWeekly ROAS = weekly media contribution / weekly media spending\nDistribution of weekly ROAS (weekly data, last year)\nRed line - mean, green line - median.\nCalculating mROAS Marginal ROAS represents the return of incremental spending based on current spending. Example - we’ve already spent $100 on SEM, how much will the next $1 bring?\nWe can calculate mROAS by increasing current spending by 1%, estimating incremental channel contribution and dividing it by incremental channel spending.\n Current spending level cur_sp is an array of weekly spending in a given period. We create next spending level next_sp by increasing cur_sp by 1%. We plug both cur_sp and next_sp into the Hill function:  Current media contribution: cur_mc = beta * Hill(cur_sp) Next-level media contribution: next_mc = beta * Hill (next_sp)   mROAS = (sum(next_mc) - sum(cur_mc)) / sum(0.01 * cur_sp)  Results and marketing budget optimization Few visualization ideas that can help the marketing team understand efficiency of current budget allocation.\nMedia channel contribution\nROAS\nmROAS\n","wordCount":"2551","inLanguage":"en","datePublished":"2021-11-02T12:05:26+01:00","dateModified":"2021-11-02T12:05:26+01:00","author":{"@type":"Person","name":"Marcin Halupka"},"mainEntityOfPage":{"@type":"WebPage","@id":"/posts/marketing-mix-modeling/"},"publisher":{"@type":"Organization","name":"Marcin Halupka","logo":{"@type":"ImageObject","url":"%3Clink%20/%20abs%20url%3E"}}}</script>
 </head>
 <body id=top>
 <script>localStorage.getItem("pref-theme")==="dark"?document.body.classList.add('dark'):localStorage.getItem("pref-theme")==="light"?document.body.classList.remove('dark'):window.matchMedia('(prefers-color-scheme: dark)').matches&&document.body.classList.add('dark')</script>
@@ -75,7 +75,7 @@
 <h1 class=post-title>
 Marketing Mix Modeling
 </h1>
-<div class=post-meta>November 2, 2021&nbsp;·&nbsp;5 min&nbsp;·&nbsp;Marcin Halupka&nbsp;|&nbsp;<a href=https://github.com/%3cpath_to_repo%3e/content/posts/marketing-mix-modeling.md rel="noopener noreferrer" target=_blank>Suggest Changes</a>
+<div class=post-meta>November 2, 2021&nbsp;·&nbsp;12 min&nbsp;·&nbsp;Marcin Halupka&nbsp;|&nbsp;<a href=https://github.com/%3cpath_to_repo%3e/content/posts/marketing-mix-modeling.md rel="noopener noreferrer" target=_blank>Suggest Changes</a>
 </div>
 </header> <div class=toc>
 <details open>
@@ -101,8 +101,16 @@ Marketing Mix Modeling
 <li>
 <a href=#model-architecture aria-label="Model architecture">Model architecture</a><ul>
 <li>
-<a href=#control-model aria-label="Control model">Control model</a></li></ul>
-</li></ul>
+<a href=#control-model aria-label="Control model">Control model</a></li>
+<li>
+<a href=#marketing-mix-model aria-label="Marketing Mix Model">Marketing Mix Model</a></li>
+<li>
+<a href=#diminishing-return-model aria-label="Diminishing return model">Diminishing return model</a></li></ul>
+</li>
+<li>
+<a href=#calculating-overall-roas-and-weekly-roas aria-label="Calculating overall ROAS and weekly ROAS">Calculating overall ROAS and weekly ROAS</a></li>
+<li>
+<a href=#calculating-mroas aria-label="Calculating mROAS">Calculating mROAS</a></li></ul>
 </li>
 <li>
 <a href=#results-and-marketing-budget-optimization aria-label="Results and marketing budget optimization">Results and marketing budget optimization</a>
@@ -329,8 +337,444 @@ sales_cols <span style=color:#f92672>=</span>[<span style=color:#e6db74>&#39;sal
 <p><img loading=lazy src=/posts/images/model-architecture.png alt="Plot 6">
 </p>
 <h3 id=control-model>Control model<a hidden class=anchor aria-hidden=true href=#control-model>#</a></h3>
-<p>The goal</p>
+<p>The goal is to predict base sales (<code>X_ctrl</code>) as an input variable to MMM - this represents the baseline sales trend without any marketing activities.</p>
+<p><img loading=lazy src=/posts/images/control-model.png alt="Plot 6">
+</p>
+<p>We divide variables into two groups: $X_1$ and $X_2$.</p>
+<p>$X_1$ - control variables positively related to sales<br>
+$X_2$ - control variables that may have either positive or negative impact on sales.<br>
+$y$ - target variable, sales</p>
+<p>The variables are centralized.</p>
+<p><strong>Priors</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Prior</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>$\beta_1$</td>
+<td>half normal (0, 5)</td>
+<td>Regression coefficients for control variables positively related to sales</td>
+</tr>
+<tr>
+<td>$\beta_2$</td>
+<td>normal (0, 5)</td>
+<td>Regression coefficients for control variables positively or negatively related to sales</td>
+</tr>
+<tr>
+<td>$\alpha$</td>
+<td>[0, min(y)]</td>
+<td>Intercept</td>
+</tr>
+<tr>
+<td>Residual</td>
+<td>inverse gamma (0.05, 0.05*0.01)</td>
+<td>Residual variance</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Python code</strong></p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#f92672>import</span> pystan
+<span style=color:#f92672>import</span> os
+os<span style=color:#f92672>.</span>environ[<span style=color:#e6db74>&#39;CC&#39;</span>] <span style=color:#f92672>=</span> <span style=color:#e6db74>&#39;gcc-10&#39;</span>
+os<span style=color:#f92672>.</span>environ[<span style=color:#e6db74>&#39;CXX&#39;</span>] <span style=color:#f92672>=</span> <span style=color:#e6db74>&#39;g++-10&#39;</span>
+
+<span style=color:#75715e># mean-centralize: sales, numeric base_vars</span>
+df_ctrl, sc_ctrl <span style=color:#f92672>=</span> mean_center_trandform(df, [<span style=color:#e6db74>&#39;sales&#39;</span>]<span style=color:#f92672>+</span>me_cols<span style=color:#f92672>+</span>st_cols<span style=color:#f92672>+</span>mrkdn_cols)
+df_ctrl <span style=color:#f92672>=</span> pd<span style=color:#f92672>.</span>concat([df_ctrl, df[hldy_cols<span style=color:#f92672>+</span>seas_cols]], axis<span style=color:#f92672>=</span><span style=color:#ae81ff>1</span>)
+
+<span style=color:#75715e># variables positively related to sales: macro economy, store count, markdown, holiday</span>
+pos_vars <span style=color:#f92672>=</span> [col <span style=color:#66d9ef>for</span> col <span style=color:#f92672>in</span> base_vars <span style=color:#66d9ef>if</span> col <span style=color:#f92672>not</span> <span style=color:#f92672>in</span> seas_cols]
+X1 <span style=color:#f92672>=</span> df_ctrl[pos_vars]<span style=color:#f92672>.</span>values
+
+<span style=color:#75715e># variables may have either positive or negtive impact on sales: seasonality</span>
+pn_vars <span style=color:#f92672>=</span> seas_cols
+X2 <span style=color:#f92672>=</span> df_ctrl[pn_vars]<span style=color:#f92672>.</span>values
+
+ctrl_data <span style=color:#f92672>=</span> {
+    <span style=color:#e6db74>&#39;N&#39;</span>: len(df_ctrl),
+    <span style=color:#e6db74>&#39;K1&#39;</span>: len(pos_vars), 
+    <span style=color:#e6db74>&#39;K2&#39;</span>: len(pn_vars), 
+    <span style=color:#e6db74>&#39;X1&#39;</span>: X1,
+    <span style=color:#e6db74>&#39;X2&#39;</span>: X2, 
+    <span style=color:#e6db74>&#39;y&#39;</span>: df_ctrl[<span style=color:#e6db74>&#39;sales&#39;</span>]<span style=color:#f92672>.</span>values,
+    <span style=color:#e6db74>&#39;max_intercept&#39;</span>: min(df_ctrl[<span style=color:#e6db74>&#39;sales&#39;</span>])
+}
+
+ctrl_code1 <span style=color:#f92672>=</span> <span style=color:#e6db74>&#39;&#39;&#39;
+</span><span style=color:#e6db74>data {
+</span><span style=color:#e6db74>  int N; // number of observations
+</span><span style=color:#e6db74>  int K1; // number of positive predictors
+</span><span style=color:#e6db74>  int K2; // number of positive/negative predictors
+</span><span style=color:#e6db74>  real max_intercept; // restrict the intercept to be less than the minimum y
+</span><span style=color:#e6db74>  matrix[N, K1] X1;
+</span><span style=color:#e6db74>  matrix[N, K2] X2;
+</span><span style=color:#e6db74>  vector[N] y; 
+</span><span style=color:#e6db74>}
+</span><span style=color:#e6db74>
+</span><span style=color:#e6db74>parameters {
+</span><span style=color:#e6db74>  vector&lt;lower=0&gt;[K1] beta1; // regression coefficients for X1 (positive)
+</span><span style=color:#e6db74>  vector[K2] beta2; // regression coefficients for X2
+</span><span style=color:#e6db74>  real&lt;lower=0, upper=max_intercept&gt; alpha; // intercept
+</span><span style=color:#e6db74>  real&lt;lower=0&gt; noise_var; // residual variance
+</span><span style=color:#e6db74>}
+</span><span style=color:#e6db74>
+</span><span style=color:#e6db74>model {
+</span><span style=color:#e6db74>  // Define the priors
+</span><span style=color:#e6db74>  beta1 ~ normal(0, 1); 
+</span><span style=color:#e6db74>  beta2 ~ normal(0, 1); 
+</span><span style=color:#e6db74>  noise_var ~ inv_gamma(0.05, 0.05 * 0.01);
+</span><span style=color:#e6db74>  // The likelihood
+</span><span style=color:#e6db74>  y ~ normal(X1*beta1 + X2*beta2 + alpha, sqrt(noise_var));
+</span><span style=color:#e6db74>}
+</span><span style=color:#e6db74>&#39;&#39;&#39;</span>
+
+sm1 <span style=color:#f92672>=</span> pystan<span style=color:#f92672>.</span>StanModel(model_code<span style=color:#f92672>=</span>ctrl_code1, verbose<span style=color:#f92672>=</span><span style=color:#66d9ef>True</span>)
+fit1 <span style=color:#f92672>=</span> sm1<span style=color:#f92672>.</span>sampling(data<span style=color:#f92672>=</span>ctrl_data, iter<span style=color:#f92672>=</span><span style=color:#ae81ff>2000</span>, chains<span style=color:#f92672>=</span><span style=color:#ae81ff>4</span>)
+fit1_result <span style=color:#f92672>=</span> fit1<span style=color:#f92672>.</span>extract()
+</code></pre></div><h3 id=marketing-mix-model>Marketing Mix Model<a hidden class=anchor aria-hidden=true href=#marketing-mix-model>#</a></h3>
+<p>Our goal is to:</p>
+<ul>
+<li>Find appropriate adstock parameters for media channels</li>
+<li>Decompose sales to media channels' contribution and baseline (non-marketing) contribution</li>
+</ul>
+<p><img loading=lazy src=/posts/images/marketing-mix-model.png alt="Plot 7">
+</p>
+<p><code>L</code> - length of media impact<br>
+<code>P</code> - peak of media impact<br>
+<code>D</code> - decay of media impact<br>
+<code>X</code> - adstocked media impression variables and base sales<br>
+<code>y</code> - target variable, sales</p>
+<p>Variables are centralized.</p>
+<p><strong>Priors</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Prior</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>$L$</td>
+<td>8</td>
+<td>Length of media impact</td>
+</tr>
+<tr>
+<td>$P$</td>
+<td>uniform(0, max_lag/2)</td>
+<td>Peak/delay of media impact</td>
+</tr>
+<tr>
+<td>$D$</td>
+<td>beta(3, 3)</td>
+<td>Decay rate of media channel</td>
+</tr>
+<tr>
+<td>$\beta$</td>
+<td>half normal(0, 1)</td>
+<td>Regression coefficients for media channels and control</td>
+</tr>
+<tr>
+<td>$\tau$</td>
+<td>normal(0, 5)</td>
+<td>Intercept</td>
+</tr>
+<tr>
+<td>Residual</td>
+<td>inverse gamma(0.05, 0.05*0.01)</td>
+<td>Residual variance</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Python code</strong></p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df_mmm, sc_mmm <span style=color:#f92672>=</span> mean_log1p_trandform(df, [<span style=color:#e6db74>&#39;sales&#39;</span>, <span style=color:#e6db74>&#39;base_sales&#39;</span>])
+mu_mdip <span style=color:#f92672>=</span> df[mdip_cols]<span style=color:#f92672>.</span>apply(np<span style=color:#f92672>.</span>mean, axis<span style=color:#f92672>=</span><span style=color:#ae81ff>0</span>)<span style=color:#f92672>.</span>values
+max_lag <span style=color:#f92672>=</span> <span style=color:#ae81ff>8</span>
+num_media <span style=color:#f92672>=</span> len(mdip_cols)
+<span style=color:#75715e># padding zero * (max_lag-1) rows</span>
+X_media <span style=color:#f92672>=</span> np<span style=color:#f92672>.</span>concatenate((np<span style=color:#f92672>.</span>zeros((max_lag<span style=color:#f92672>-</span><span style=color:#ae81ff>1</span>, num_media)), df[mdip_cols]<span style=color:#f92672>.</span>values), axis<span style=color:#f92672>=</span><span style=color:#ae81ff>0</span>)
+X_ctrl <span style=color:#f92672>=</span> df_mmm[<span style=color:#e6db74>&#39;base_sales&#39;</span>]<span style=color:#f92672>.</span>values<span style=color:#f92672>.</span>reshape(len(df),<span style=color:#ae81ff>1</span>)
+model_data2 <span style=color:#f92672>=</span> {
+    <span style=color:#e6db74>&#39;N&#39;</span>: len(df),
+    <span style=color:#e6db74>&#39;max_lag&#39;</span>: max_lag, 
+    <span style=color:#e6db74>&#39;num_media&#39;</span>: num_media,
+    <span style=color:#e6db74>&#39;X_media&#39;</span>: X_media, 
+    <span style=color:#e6db74>&#39;mu_mdip&#39;</span>: mu_mdip,
+    <span style=color:#e6db74>&#39;num_ctrl&#39;</span>: X_ctrl<span style=color:#f92672>.</span>shape[<span style=color:#ae81ff>1</span>],
+    <span style=color:#e6db74>&#39;X_ctrl&#39;</span>: X_ctrl, 
+    <span style=color:#e6db74>&#39;y&#39;</span>: df_mmm[<span style=color:#e6db74>&#39;sales&#39;</span>]<span style=color:#f92672>.</span>values
+}
+
+model_code2 <span style=color:#f92672>=</span> <span style=color:#e6db74>&#39;&#39;&#39;
+</span><span style=color:#e6db74>functions {
+</span><span style=color:#e6db74>  // the adstock transformation with a vector of weights
+</span><span style=color:#e6db74>  real Adstock(vector t, row_vector weights) {
+</span><span style=color:#e6db74>    return dot_product(t, weights) / sum(weights);
+</span><span style=color:#e6db74>  }
+</span><span style=color:#e6db74>}
+</span><span style=color:#e6db74>data {
+</span><span style=color:#e6db74>  // the total number of observations
+</span><span style=color:#e6db74>  int&lt;lower=1&gt; N;
+</span><span style=color:#e6db74>  // the vector of sales
+</span><span style=color:#e6db74>  real y[N];
+</span><span style=color:#e6db74>  // the maximum duration of lag effect, in weeks
+</span><span style=color:#e6db74>  int&lt;lower=1&gt; max_lag;
+</span><span style=color:#e6db74>  // the number of media channels
+</span><span style=color:#e6db74>  int&lt;lower=1&gt; num_media;
+</span><span style=color:#e6db74>  // matrix of media variables
+</span><span style=color:#e6db74>  matrix[N+max_lag-1, num_media] X_media;
+</span><span style=color:#e6db74>  // vector of media variables&#39; mean
+</span><span style=color:#e6db74>  real mu_mdip[num_media];
+</span><span style=color:#e6db74>  // the number of other control variables
+</span><span style=color:#e6db74>  int&lt;lower=1&gt; num_ctrl;
+</span><span style=color:#e6db74>  // a matrix of control variables
+</span><span style=color:#e6db74>  matrix[N, num_ctrl] X_ctrl;
+</span><span style=color:#e6db74>}
+</span><span style=color:#e6db74>parameters {
+</span><span style=color:#e6db74>  // residual variance
+</span><span style=color:#e6db74>  real&lt;lower=0&gt; noise_var;
+</span><span style=color:#e6db74>  // the intercept
+</span><span style=color:#e6db74>  real tau;
+</span><span style=color:#e6db74>  // the coefficients for media variables and base sales
+</span><span style=color:#e6db74>  vector&lt;lower=0&gt;[num_media+num_ctrl] beta;
+</span><span style=color:#e6db74>  // the decay and peak parameter for the adstock transformation of
+</span><span style=color:#e6db74>  // each media
+</span><span style=color:#e6db74>  vector&lt;lower=0,upper=1&gt;[num_media] decay;
+</span><span style=color:#e6db74>  vector&lt;lower=0,upper=ceil(max_lag/2)&gt;[num_media] peak;
+</span><span style=color:#e6db74>}
+</span><span style=color:#e6db74>transformed parameters {
+</span><span style=color:#e6db74>  // the cumulative media effect after adstock
+</span><span style=color:#e6db74>  real cum_effect;
+</span><span style=color:#e6db74>  // matrix of media variables after adstock
+</span><span style=color:#e6db74>  matrix[N, num_media] X_media_adstocked;
+</span><span style=color:#e6db74>  // matrix of all predictors
+</span><span style=color:#e6db74>  matrix[N, num_media+num_ctrl] X;
+</span><span style=color:#e6db74>  
+</span><span style=color:#e6db74>  // adstock, mean-center, log1p transformation
+</span><span style=color:#e6db74>  row_vector[max_lag] lag_weights;
+</span><span style=color:#e6db74>  for (nn in 1:N) {
+</span><span style=color:#e6db74>    for (media in 1 : num_media) {
+</span><span style=color:#e6db74>      for (lag in 1 : max_lag) {
+</span><span style=color:#e6db74>        lag_weights[max_lag-lag+1] &lt;- pow(decay[media], (lag - 1 - peak[media]) ^ 2);
+</span><span style=color:#e6db74>      }
+</span><span style=color:#e6db74>     cum_effect &lt;- Adstock(sub_col(X_media, nn, media, max_lag), lag_weights);
+</span><span style=color:#e6db74>     X_media_adstocked[nn, media] &lt;- log1p(cum_effect/mu_mdip[media]);
+</span><span style=color:#e6db74>    }
+</span><span style=color:#e6db74>  X &lt;- append_col(X_media_adstocked, X_ctrl);
+</span><span style=color:#e6db74>  } 
+</span><span style=color:#e6db74>}
+</span><span style=color:#e6db74>model {
+</span><span style=color:#e6db74>  decay ~ beta(3,3);
+</span><span style=color:#e6db74>  peak ~ uniform(0, ceil(max_lag/2));
+</span><span style=color:#e6db74>  tau ~ normal(0, 5);
+</span><span style=color:#e6db74>  for (i in 1 : num_media+num_ctrl) {
+</span><span style=color:#e6db74>    beta[i] ~ normal(0, 1);
+</span><span style=color:#e6db74>  }
+</span><span style=color:#e6db74>  noise_var ~ inv_gamma(0.05, 0.05 * 0.01);
+</span><span style=color:#e6db74>  y ~ normal(tau + X * beta, sqrt(noise_var));
+</span><span style=color:#e6db74>}
+</span><span style=color:#e6db74>&#39;&#39;&#39;</span>
+
+sm2 <span style=color:#f92672>=</span> pystan<span style=color:#f92672>.</span>StanModel(model_code<span style=color:#f92672>=</span>model_code2, verbose<span style=color:#f92672>=</span><span style=color:#66d9ef>True</span>)
+fit2 <span style=color:#f92672>=</span> sm2<span style=color:#f92672>.</span>sampling(data<span style=color:#f92672>=</span>model_data2, iter<span style=color:#f92672>=</span><span style=color:#ae81ff>1000</span>, chains<span style=color:#f92672>=</span><span style=color:#ae81ff>3</span>)
+fit2_result <span style=color:#f92672>=</span> fit2<span style=color:#f92672>.</span>extract()
+</code></pre></div><p><strong>Distribution of Media Coefficients</strong></p>
+<p>Red line - mean, green line - median.</p>
+<p><img loading=lazy src=/posts/images/distribution-media-coefficients.png alt="Plot 7">
+</p>
+<p><strong>Decompose sales to media channels' contribution</strong></p>
+<p>Each media channel&rsquo;s contribution = total sales - sales upon removal of the channel. In the previous model fitting step, parameters of the log-log model have been found:</p>
+<p><img loading=lazy src=/posts/images/log-log-model.png alt="Plot 7">
+</p>
+<p>Now we can plug them into the multiplicative mode:</p>
+<p><img loading=lazy src=/posts/images/multiplicative-model.png alt="Plot 7">
+</p>
+<p>Baseline = $1000$</p>
+<p>$x_1 = 100, \; \beta_1 = 0.05, \; x_1^{\beta_1} = 1.26$<br>
+$x_2 = 500, \; \beta_2 = 0.03, \; x_2^{\beta_2} = 1.20$<br>
+$y = 1000 \cdot 1.26 \cdot 1.20 = 1512$<br>
+Contribution of media 1: $C_1 = 1512 - 1512/1.26 = 312$<br>
+Contribution of media 1: $C_1 = 1512 - 1512/1.20 = 252$<br>
+Sum of media contribution is slightly different from total:<br>
+$V_{pred} = C_1 + C_2 = 564, \; V_{true} = 512$<br>
+So we can scale each factor&rsquo;s contribution by removing the delta volume proportionally:<br>
+$C_1^\prime = 312 - (564-512) \cdot 312/564 = 283.23$<br>
+$C_2^\prime = 252 - (564-512) \cdot 252/564 = 228.77$<br>
+Total colume: $V_{total}^\prime = 1000 + 283.23 + 228.77 = 1512$</p>
+<p><strong>Python code</strong></p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#75715e># decompose sales to media contribution</span>
+mc_df <span style=color:#f92672>=</span> mmm_decompose_media_contrib(mmm, df, y_true<span style=color:#f92672>=</span>df[<span style=color:#e6db74>&#39;sales_ln&#39;</span>])
+adstock_params <span style=color:#f92672>=</span> mmm[<span style=color:#e6db74>&#39;adstock_params&#39;</span>]
+mc_pct, mc_pct2 <span style=color:#f92672>=</span> calc_media_contrib_pct(mc_df, period<span style=color:#f92672>=</span><span style=color:#ae81ff>52</span>)  
+</code></pre></div><p><strong>Adstock parameters</strong></p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>{<span style=color:#e6db74>&#39;dm&#39;</span>: {<span style=color:#e6db74>&#39;L&#39;</span>: <span style=color:#ae81ff>8</span>, <span style=color:#e6db74>&#39;P&#39;</span>: <span style=color:#ae81ff>0.8147057071636012</span>, <span style=color:#e6db74>&#39;D&#39;</span>: <span style=color:#ae81ff>0.5048365638721349</span>},
+ <span style=color:#e6db74>&#39;inst&#39;</span>: {<span style=color:#e6db74>&#39;L&#39;</span>: <span style=color:#ae81ff>8</span>, <span style=color:#e6db74>&#39;P&#39;</span>: <span style=color:#ae81ff>0.6339321363933637</span>, <span style=color:#e6db74>&#39;D&#39;</span>: <span style=color:#ae81ff>0.40532404247040194</span>},
+ <span style=color:#e6db74>&#39;nsp&#39;</span>: {<span style=color:#e6db74>&#39;L&#39;</span>: <span style=color:#ae81ff>8</span>, <span style=color:#e6db74>&#39;P&#39;</span>: <span style=color:#ae81ff>1.1076944292039324</span>, <span style=color:#e6db74>&#39;D&#39;</span>: <span style=color:#ae81ff>0.4612905130128658</span>},
+ <span style=color:#e6db74>&#39;auddig&#39;</span>: {<span style=color:#e6db74>&#39;L&#39;</span>: <span style=color:#ae81ff>8</span>, <span style=color:#e6db74>&#39;P&#39;</span>: <span style=color:#ae81ff>1.8834110997525702</span>, <span style=color:#e6db74>&#39;D&#39;</span>: <span style=color:#ae81ff>0.5117823761413419</span>},
+ <span style=color:#e6db74>&#39;audtr&#39;</span>: {<span style=color:#e6db74>&#39;L&#39;</span>: <span style=color:#ae81ff>8</span>, <span style=color:#e6db74>&#39;P&#39;</span>: <span style=color:#ae81ff>1.9892680621155827</span>, <span style=color:#e6db74>&#39;D&#39;</span>: <span style=color:#ae81ff>0.5046141055524362</span>},
+ <span style=color:#e6db74>&#39;vidtr&#39;</span>: {<span style=color:#e6db74>&#39;L&#39;</span>: <span style=color:#ae81ff>8</span>, <span style=color:#e6db74>&#39;P&#39;</span>: <span style=color:#ae81ff>0.05520253973872224</span>, <span style=color:#e6db74>&#39;D&#39;</span>: <span style=color:#ae81ff>0.0846136627657064</span>},
+ <span style=color:#e6db74>&#39;viddig&#39;</span>: {<span style=color:#e6db74>&#39;L&#39;</span>: <span style=color:#ae81ff>8</span>, <span style=color:#e6db74>&#39;P&#39;</span>: <span style=color:#ae81ff>1.862571613911107</span>, <span style=color:#e6db74>&#39;D&#39;</span>: <span style=color:#ae81ff>0.5074553132446618</span>},
+ <span style=color:#e6db74>&#39;so&#39;</span>: {<span style=color:#e6db74>&#39;L&#39;</span>: <span style=color:#ae81ff>8</span>, <span style=color:#e6db74>&#39;P&#39;</span>: <span style=color:#ae81ff>1.7027472358912694</span>, <span style=color:#e6db74>&#39;D&#39;</span>: <span style=color:#ae81ff>0.5046386226501091</span>},
+ <span style=color:#e6db74>&#39;on&#39;</span>: {<span style=color:#e6db74>&#39;L&#39;</span>: <span style=color:#ae81ff>8</span>, <span style=color:#e6db74>&#39;P&#39;</span>: <span style=color:#ae81ff>1.4169662215350334</span>, <span style=color:#e6db74>&#39;D&#39;</span>: <span style=color:#ae81ff>0.4907407637366824</span>},
+ <span style=color:#e6db74>&#39;em&#39;</span>: {<span style=color:#e6db74>&#39;L&#39;</span>: <span style=color:#ae81ff>8</span>, <span style=color:#e6db74>&#39;P&#39;</span>: <span style=color:#ae81ff>1.0590065753144235</span>, <span style=color:#e6db74>&#39;D&#39;</span>: <span style=color:#ae81ff>0.44420264450045377</span>},
+ <span style=color:#e6db74>&#39;sms&#39;</span>: {<span style=color:#e6db74>&#39;L&#39;</span>: <span style=color:#ae81ff>8</span>, <span style=color:#e6db74>&#39;P&#39;</span>: <span style=color:#ae81ff>1.8487648735160152</span>, <span style=color:#e6db74>&#39;D&#39;</span>: <span style=color:#ae81ff>0.5090970201714644</span>},
+ <span style=color:#e6db74>&#39;aff&#39;</span>: {<span style=color:#e6db74>&#39;L&#39;</span>: <span style=color:#ae81ff>8</span>, <span style=color:#e6db74>&#39;P&#39;</span>: <span style=color:#ae81ff>0.6018657109295106</span>, <span style=color:#e6db74>&#39;D&#39;</span>: <span style=color:#ae81ff>0.39889023002777724</span>},
+ <span style=color:#e6db74>&#39;sem&#39;</span>: {<span style=color:#e6db74>&#39;L&#39;</span>: <span style=color:#ae81ff>8</span>, <span style=color:#e6db74>&#39;P&#39;</span>: <span style=color:#ae81ff>1.34945185610011</span>, <span style=color:#e6db74>&#39;D&#39;</span>: <span style=color:#ae81ff>0.47875793676213835</span>}}
+</code></pre></div><h3 id=diminishing-return-model>Diminishing return model<a hidden class=anchor aria-hidden=true href=#diminishing-return-model>#</a></h3>
+<p>The goal for each channel is to find the relationship (fit a Hill function) between spending and contribution so <code>ROAS</code> and <code>mROAS</code> can be calculated.</p>
+<p><img loading=lazy src=/posts/images/diminishing-return-model.png alt="Plot 7">
+</p>
+<p><code>x</code> - adstocked media channel spending<br>
+<code>K</code> - half saturation<br>
+<code>S</code> - shape<br>
+<code>y</code> - target variable, the media channel&rsquo;s contribution</p>
+<p>Variables are centralized</p>
+<p><strong>Priors</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Prior</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>$K$</td>
+<td>beta(2, 2)</td>
+<td>Half saturation point</td>
+</tr>
+<tr>
+<td>$S$</td>
+<td>gamma(3, 1)</td>
+<td>Shape</td>
+</tr>
+<tr>
+<td>$\beta$</td>
+<td>half normal(0, 1)</td>
+<td>Coefficient</td>
+</tr>
+<tr>
+<td>Residual</td>
+<td>inverse gamma(0.05, 0.05*0.01)</td>
+<td>Residual variance</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Python code</strong></p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#66d9ef>def</span> <span style=color:#a6e22e>create_hill_model_data</span>(df, mc_df, adstock_params, media):
+    y <span style=color:#f92672>=</span> mc_df[<span style=color:#e6db74>&#39;mdip_&#39;</span><span style=color:#f92672>+</span>media]<span style=color:#f92672>.</span>values
+    L, P, D <span style=color:#f92672>=</span> adstock_params[media][<span style=color:#e6db74>&#39;L&#39;</span>], adstock_params[media][<span style=color:#e6db74>&#39;P&#39;</span>], adstock_params[media][<span style=color:#e6db74>&#39;D&#39;</span>]
+    x <span style=color:#f92672>=</span> df[<span style=color:#e6db74>&#39;mdsp_&#39;</span><span style=color:#f92672>+</span>media]<span style=color:#f92672>.</span>values
+    x_adstocked <span style=color:#f92672>=</span> apply_adstock(x, L, P, D)
+    <span style=color:#75715e># centralize</span>
+    mu_x, mu_y <span style=color:#f92672>=</span> x_adstocked<span style=color:#f92672>.</span>mean(), y<span style=color:#f92672>.</span>mean()
+    sc <span style=color:#f92672>=</span> {<span style=color:#e6db74>&#39;x&#39;</span>: mu_x, <span style=color:#e6db74>&#39;y&#39;</span>: mu_y}
+    x <span style=color:#f92672>=</span> x_adstocked<span style=color:#f92672>/</span>mu_x
+    y <span style=color:#f92672>=</span> y<span style=color:#f92672>/</span>mu_y
+        
+    model_data <span style=color:#f92672>=</span> {
+        <span style=color:#e6db74>&#39;N&#39;</span>: len(y),
+        <span style=color:#e6db74>&#39;y&#39;</span>: y,
+        <span style=color:#e6db74>&#39;X&#39;</span>: x
+    }
+    <span style=color:#66d9ef>return</span> model_data, sc
+
+model_code3 <span style=color:#f92672>=</span> <span style=color:#e6db74>&#39;&#39;&#39;
+</span><span style=color:#e6db74>functions {
+</span><span style=color:#e6db74>  // the Hill function
+</span><span style=color:#e6db74>  real Hill(real t, real ec, real slope) {
+</span><span style=color:#e6db74>  return 1 / (1 + (t / ec)^(-slope));
+</span><span style=color:#e6db74>  }
+</span><span style=color:#e6db74>}
+</span><span style=color:#e6db74>
+</span><span style=color:#e6db74>data {
+</span><span style=color:#e6db74>  // the total number of observations
+</span><span style=color:#e6db74>  int&lt;lower=1&gt; N;
+</span><span style=color:#e6db74>  // y: vector of media contribution
+</span><span style=color:#e6db74>  vector[N] y;
+</span><span style=color:#e6db74>  // X: vector of adstocked media spending
+</span><span style=color:#e6db74>  vector[N] X;
+</span><span style=color:#e6db74>}
+</span><span style=color:#e6db74>
+</span><span style=color:#e6db74>parameters {
+</span><span style=color:#e6db74>  // residual variance
+</span><span style=color:#e6db74>  real&lt;lower=0&gt; noise_var;
+</span><span style=color:#e6db74>  // regression coefficient
+</span><span style=color:#e6db74>  real&lt;lower=0&gt; beta_hill;
+</span><span style=color:#e6db74>  // ec50 and slope for Hill function of the media
+</span><span style=color:#e6db74>  real&lt;lower=0,upper=1&gt; ec;
+</span><span style=color:#e6db74>  real&lt;lower=0&gt; slope;
+</span><span style=color:#e6db74>}
+</span><span style=color:#e6db74>
+</span><span style=color:#e6db74>transformed parameters {
+</span><span style=color:#e6db74>  // a vector of the mean response
+</span><span style=color:#e6db74>  vector[N] mu;
+</span><span style=color:#e6db74>  for (i in 1:N) {
+</span><span style=color:#e6db74>    mu[i] &lt;- beta_hill * Hill(X[i], ec, slope);
+</span><span style=color:#e6db74>  }
+</span><span style=color:#e6db74>}
+</span><span style=color:#e6db74>
+</span><span style=color:#e6db74>model {
+</span><span style=color:#e6db74>  slope ~ gamma(3, 1);
+</span><span style=color:#e6db74>  ec ~ beta(2, 2);
+</span><span style=color:#e6db74>  beta_hill ~ normal(0, 1);
+</span><span style=color:#e6db74>  noise_var ~ inv_gamma(0.05, 0.05 * 0.01); 
+</span><span style=color:#e6db74>  y ~ normal(mu, sqrt(noise_var));
+</span><span style=color:#e6db74>}
+</span><span style=color:#e6db74>&#39;&#39;&#39;</span>
+
+<span style=color:#75715e># train hill models for all media channels</span>
+sm3 <span style=color:#f92672>=</span> pystan<span style=color:#f92672>.</span>StanModel(model_code<span style=color:#f92672>=</span>model_code3, verbose<span style=color:#f92672>=</span><span style=color:#66d9ef>True</span>)
+hill_models <span style=color:#f92672>=</span> {}
+to_train <span style=color:#f92672>=</span> [<span style=color:#e6db74>&#39;dm&#39;</span>, <span style=color:#e6db74>&#39;inst&#39;</span>, <span style=color:#e6db74>&#39;nsp&#39;</span>, <span style=color:#e6db74>&#39;auddig&#39;</span>, <span style=color:#e6db74>&#39;audtr&#39;</span>, <span style=color:#e6db74>&#39;vidtr&#39;</span>, <span style=color:#e6db74>&#39;viddig&#39;</span>, <span style=color:#e6db74>&#39;so&#39;</span>, <span style=color:#e6db74>&#39;on&#39;</span>, <span style=color:#e6db74>&#39;sem&#39;</span>]
+<span style=color:#66d9ef>for</span> media <span style=color:#f92672>in</span> to_train:
+    print(<span style=color:#e6db74>&#39;training for media: &#39;</span>, media)
+    hill_model <span style=color:#f92672>=</span> train_hill_model(df, mc_df, adstock_params, media, sm3)
+    hill_models[media] <span style=color:#f92672>=</span> hill_model
+</code></pre></div><p><strong>Diminishing Return Model (Fitted Hill Curve)</strong></p>
+<p><img loading=lazy src=/posts/images/fitted-hill-curve.png alt="Plot 7">
+</p>
+<h2 id=calculating-overall-roas-and-weekly-roas>Calculating overall ROAS and weekly ROAS<a hidden class=anchor aria-hidden=true href=#calculating-overall-roas-and-weekly-roas>#</a></h2>
+<p><code>Overall ROAS</code> = total media contribution / total media spending<br>
+<code>Weekly ROAS</code> = weekly media contribution / weekly media spending</p>
+<p><strong>Distribution of weekly ROAS (weekly data, last year)</strong></p>
+<p>Red line - mean, green line - median.</p>
+<p><img loading=lazy src=/posts/images/distribution-weekly-roas.png alt="Plot 7">
+</p>
+<h2 id=calculating-mroas>Calculating mROAS<a hidden class=anchor aria-hidden=true href=#calculating-mroas>#</a></h2>
+<p>Marginal ROAS represents the return of incremental spending based on current spending. Example - we&rsquo;ve already spent $100 on SEM, how much will the next $1 bring?</p>
+<p>We can calculate mROAS by increasing current spending by 1%, estimating incremental channel contribution and dividing it by incremental channel spending.</p>
+<ol>
+<li>Current spending level <code>cur_sp</code> is an array of weekly spending in a given period.</li>
+<li>We create next spending level <code>next_sp</code> by increasing <code>cur_sp</code> by 1%.</li>
+<li>We plug both <code>cur_sp</code> and <code>next_sp</code> into the Hill function:
+<ul>
+<li>Current media contribution: <code>cur_mc</code> = beta * Hill(<code>cur_sp</code>)</li>
+<li>Next-level media contribution: <code>next_mc</code> = beta * Hill (<code>next_sp</code>)</li>
+</ul>
+</li>
+<li>mROAS = (sum(<code>next_mc</code>) - sum(<code>cur_mc</code>)) / sum(0.01 * <code>cur_sp</code>)</li>
+</ol>
 <h1 id=results-and-marketing-budget-optimization>Results and marketing budget optimization<a hidden class=anchor aria-hidden=true href=#results-and-marketing-budget-optimization>#</a></h1>
+<p>Few visualization ideas that can help the marketing team understand efficiency of current budget allocation.</p>
+<p><strong>Media channel contribution</strong></p>
+<p><img loading=lazy src=/posts/images/media-channel-contribution.png alt="Plot 7">
+</p>
+<p><img loading=lazy src=/posts/images/media-contribution-percentage.png alt="Plot 7">
+</p>
+<p><strong>ROAS</strong></p>
+<p><img loading=lazy src=/posts/images/media-channel-contribution-roas.png alt="Plot 7">
+</p>
+<p><strong>mROAS</strong></p>
+<p><img loading=lazy src=/posts/images/media-channel-roas-mroas.png alt="Plot 7">
+</p>
 </div>
 <footer class=post-footer>
 <nav class=paginav>
