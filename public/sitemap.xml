@@ -2,13 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>/</loc>
-    <lastmod>2021-11-02T12:05:26+01:00</lastmod>
+    <loc>/posts/item-to-item-collaborative-filtering/</loc>
+    <lastmod>2021-11-16T17:15:59+01:00</lastmod>
   </url><url>
-    <loc>/posts/marketing-mix-modeling/</loc>
-    <lastmod>2021-11-02T12:05:26+01:00</lastmod>
+    <loc>/</loc>
+    <lastmod>2021-11-16T17:15:59+01:00</lastmod>
   </url><url>
     <loc>/posts/</loc>
+    <lastmod>2021-11-16T17:15:59+01:00</lastmod>
+  </url><url>
+    <loc>/posts/marketing-mix-modeling/</loc>
     <lastmod>2021-11-02T12:05:26+01:00</lastmod>
   </url><url>
     <loc>/posts/time-series-visualization/</loc>
