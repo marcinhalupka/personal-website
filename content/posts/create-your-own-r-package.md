@@ -1,7 +1,7 @@
 ---
 title: "Create Your Own R Package"
 date: 2021-11-29T21:33:55+01:00
-draft: true
+draft: false
 ---
 
 Packages are the fundamental units of reproducible R code. They include reusable R functions, the documentation that describes how
